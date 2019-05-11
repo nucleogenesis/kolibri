@@ -1,5 +1,5 @@
 Feature: Lessons subtab
-  Coach needs to be able to see the lesson report details with the progress and score for each learner 
+  Coach needs to be able to see the lesson report details with the progress and score for each learner
 
   Background:
     Given I am logged in as a coach
@@ -10,7 +10,7 @@ Feature: Lessons subtab
       When I click on lesson <lesson>
       Then I see the *Report* tab and the table with each lesson resource
         And I see the *Progress* and *Average time spent* columns for each resource
-        
+
     Scenario: Review resource progress *Report* subtab
       When I click on a resource <resource>
       Then I see the table of learners
@@ -44,10 +44,37 @@ Feature: Lessons subtab
     Then their *Progress* column states *Completed*
 
   Scenario: Learner needs help with a resource
-    When a learner has given 2 wrong answers in the <exercise> 
+    When a learner has given 2 wrong answers in the <exercise>
       # Clarify conditions for *Needs help*
     Then their *Progress* column states *Needs help*
 
+  Scenario: View the resource report page by groups
+    Given that I am on the <resource> report page
+    When I click *View by groups* checkbox
+    Then I see learners grouped by groups belonging to <lesson> recipients
+    And I see empty groups that are recipients of the <lesson>
+    And I cannot see empty groups that aren't recipients of the <lesson>
+    And if the <lesson> recipient is *Entire class*
+      And there are <lesson> learners who do not have any group assigned
+      I can see *Ungrouped learners* section containing those learners
+
+  Scenario: View resource preview
+    Given that I am on the <resource> report page
+    When I click *Preview* button
+    Then I can see the <resource> preview
+    When I click the back arrow in the immersive toolbar
+    Then I am returned to the <resource> report page
+
+  Scenario: View resource preview when learners grouped by <lesson> groups
+    Given that I am on the <resource> report page
+      And learners are grouped by <lesson> groups
+    When I click *Preview* button
+    Then I can see the <resource> preview
+    When I click the back arrow in the immersive toolbar
+    Then I am returned to the <resource> report page
+      And *View by groups* checkbox stays checked
+      And I can see learners grouped by <lesson> groups
+
 Examples:
-| class     | learner  | lesson         | exercise   | resource                 | 
+| class     | learner  | lesson         | exercise   | resource                 |
 | My class  | Marc G.  | Basic division | Divide up! | One digit division video |
