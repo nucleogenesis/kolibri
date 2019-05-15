@@ -227,6 +227,10 @@ Update the following variables:
 
 Publish the Medium post if necessary.
 
+* Android
+
+  An Android APK is automatically generated and signed whenever the release pipeline is unblocked past the per-PR "cleanup" phase. These, however, are not publicly distributed to Pantry or the learningequality.org/download page at the moment.
+
 
 Update the demo server
 ----------------------
