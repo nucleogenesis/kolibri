@@ -70,7 +70,7 @@ Feature: Lessons subtab
       And the <classroom> has at least one empty learners group
       And the <lesson> has been assigned to the entire <classroom>
     When I click *View by groups* checkbox
-    Then I see the empty group 
+    Then I see the empty group
 
   Scenario: The resource report page viewed by groups when the <lesson> assigned to a group
     Given that I am on the <resource> report page
