@@ -2,7 +2,7 @@
 
   <div :style="{ backgroundColor: $coreBgLight }">
     <h3 class="header">
-      {{ coachStrings.$tr('learnersLabel') }}
+      {{ common$tr('learnersLabel') }}
     </h3>
 
     <ul ref="learnerList" class="history-list">

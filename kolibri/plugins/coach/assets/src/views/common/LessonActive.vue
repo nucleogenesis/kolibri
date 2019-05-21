@@ -33,8 +33,8 @@
     computed: {
       label() {
         return this.active
-          ? this.coachStrings.$tr('lessonActiveLabel')
-          : this.coachStrings.$tr('lessonInactiveLabel');
+          ? this.common$tr('lessonActiveLabel')
+          : this.common$tr('lessonInactiveLabel');
       },
     },
   };

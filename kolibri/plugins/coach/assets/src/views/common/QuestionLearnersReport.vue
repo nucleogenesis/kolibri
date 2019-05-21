@@ -26,7 +26,7 @@
         />
         <div slot="main" class="exercise-section" :style="{ backgroundColor: $coreBgLight }">
           <KCheckbox
-            :label="coachStrings.$tr('showCorrectAnswerLabel')"
+            :label="common$tr('showCorrectAnswerLabel')"
             :checked="showCorrectAnswer"
             @change="toggleShowCorrectAnswer"
           />

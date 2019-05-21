@@ -35,7 +35,7 @@
         <template v-else>
           <KButton
             v-if="moreResults"
-            :text="coachStrings.$tr('showMoreAction')"
+            :text="common$tr('showMoreAction')"
             @click="fetchNotifications"
           />
         </template>
@@ -63,7 +63,7 @@
   import { CollectionTypes } from '../../../constants/lessonsConstants';
   import { LastPages } from '../../../constants/lastPagesConstants';
   import { notificationLink } from '../../../modules/coachNotifications/gettersUtils';
-  import { coachStrings } from '../../common/commonCoachStrings';
+  import { coachStringsMixin } from '../../common/commonCoachStrings';
   import NotificationCard from './NotificationCard';
   import NotificationsFilter from './NotificationsFilter';
 
@@ -77,6 +77,7 @@
       NotificationsFilter,
       NotificationCard,
     },
+    mixins: [coachStringsMixin],
     props: {
       // getParams for NotificationsResource.fetchCollection
       notificationParams: {
@@ -115,7 +116,6 @@
           LESSON: 'lesson',
           QUIZ: 'quiz',
         },
-        coachStrings,
       };
     },
     computed: {
