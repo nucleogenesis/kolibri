@@ -2,8 +2,7 @@ import { ContentNodeResource } from 'kolibri.resources';
 import store from 'kolibri.coreVue.vuex.store';
 import { assessmentMetaDataState } from 'kolibri.coreVue.vuex.mappers';
 import { fetchNodeDataAndConvertExam } from 'kolibri.utils.exams';
-import { crossComponentTranslator } from 'kolibri.utils.i18n';
-import AssessmentQuestionListItem from './../../views/plan/CreateExamPage/AssessmentQuestionListItem';
+import { coachStrings } from '../../views/common/commonCoachStrings';
 
 export function questionRootRedirectHandler(params, name, next) {
   return showQuestionDetailView(params).then(learnerId => {
