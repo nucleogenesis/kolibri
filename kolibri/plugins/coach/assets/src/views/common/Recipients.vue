@@ -5,7 +5,7 @@
       {{ $tr('assignmentClass') }}
     </template>
     <template v-else>
-      <TruncatedItemList :items="groupNames" />
+      {{ $tr('noOne') }}
     </template>
   </span>
 
@@ -14,6 +14,7 @@
 
 <script>
 
+  import AssignmentSummary from '../plan/assignments/AssignmentSummary';
   import TruncatedItemList from './TruncatedItemList';
   import { coachStringsMixin } from './commonCoachStrings.js';
 
@@ -28,9 +29,14 @@
         type: Array,
         required: true,
       },
+      hasAssignments: {
+        type: Boolean,
+        required: true,
+      },
     },
     $trs: {
       assignmentClass: 'Entire class',
+      noOne: 'No one',
     },
   };
 
