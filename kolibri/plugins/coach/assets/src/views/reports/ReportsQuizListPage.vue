@@ -63,7 +63,6 @@
 <script>
 
   import commonCoach from '../common';
-  import CoachExamsPage from '../plan/CoachExamsPage';
   import ReportsHeader from './ReportsHeader';
 
   export default {
