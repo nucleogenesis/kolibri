@@ -74,7 +74,7 @@ profile$trs.prototype.apply = function(compiler) {
                           key = keyFromArguments(node.arguments);
                           common = true;
                         }
-                        if (key !== undefined && namespace) {
+                        if (key && namespace) {
                           let $tring = getStringFromNamespaceKey(
                             strProfile,
                             namespace,
