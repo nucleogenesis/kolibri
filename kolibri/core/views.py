@@ -94,7 +94,7 @@ def set_language(request):
 def logout_view(request):
     lang_code = request.session.get(LANGUAGE_SESSION_KEY) or get_settings_language()
     logout(request)
-    return HttpResponseRedirect(reverse("kolibri:core:redirect_user"), lang_code)
+    return HttpResponseRedirect(translate_url(reverse("kolibri:core:redirect_user"), lang_code))
 
 
 def get_urls_by_role(role):
