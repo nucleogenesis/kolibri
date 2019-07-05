@@ -156,20 +156,42 @@ class AllUrlsTest(APITestCase):
             credentials={"username": user.username, "password": DUMMY_PASSWORD}
         )
 
-    def test_logout_language_persistence(self):
+class LogoutLanguagePersistenceTest(APITestCase):
+    def setUp(self):
+        provision_device()
         facility = FacilityFactory.create()
         user = create_superuser(facility)
-        credentials = {"username": user.username, "password": DUMMY_PASSWORD}
+        self.credentials = {"username": user.username, "password": DUMMY_PASSWORD}
 
+    def test_persistent_language_on_namespaced_logout(self):
+        # Test that namespaced /{lang_code}/logout persists that namespace.
         # Test a few language codes
         for lang_code in ['sw-tz', 'fr-fr', 'es-es']:
-            self.client.login(**credentials)
+            self.client.login(**self.credentials)
             response = self.client.post("/{}/logout".format(lang_code))
             self.assertTrue(lang_code in response.url)
 
-        # Test /logout without any in-path language code.
-        # In test - this will default to the settings language
-        self.client.login(**credentials)
-        response = self.client.post("/logout")
+    def test_default_language_without_namespaced_logout(self):
+        # Test /logout without any in-path language code. Expect default language setting.
+        self.client.login(**self.credentials)
+        response = self.client.get("/logout")
         self.assertTrue(get_settings_language() in response.url)
 
+    def test_persistent_cookie_language_setting_on_logout(self):
+        # Test when set on a cookie.
+        from django.http.cookie import SimpleCookie
+        from django.conf import settings
+        self.client.login(**self.credentials)
+        self.client.cookies = SimpleCookie({settings.LANGUAGE_COOKIE_NAME: "fr-fr"})
+        response = self.client.post("/logout")
+        self.assertTrue('fr-fr' in response.url)
+
+    def test_persistent_session_language_setting_on_logout(self):
+        # Test when set on a session.
+        from django.utils.translation import LANGUAGE_SESSION_KEY
+        self.client.login(**self.credentials)
+        session = self.client.session
+        session[LANGUAGE_SESSION_KEY] = 'sw-tz'
+        session.save()
+        response = self.client.post("/logout")
+        self.assertTrue('sw-tz' in response.url)
