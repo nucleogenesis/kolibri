@@ -26,7 +26,6 @@ from kolibri.core.device.hooks import SetupHook
 from kolibri.core.device.translation import get_accept_headers_language
 from kolibri.core.device.translation import get_device_language
 from kolibri.core.device.translation import get_settings_language
-from kolibri.core.device.translation import get_language_from_path
 from kolibri.core.device.utils import device_provisioned
 from kolibri.core.hooks import RoleBasedRedirectHook
 
@@ -93,8 +92,9 @@ def set_language(request):
 
 
 def logout_view(request):
+    lang_code = request.session.get(LANGUAGE_SESSION_KEY) or get_settings_language()
     logout(request)
-    return HttpResponseRedirect(reverse("kolibri:core:redirect_user"))
+    return HttpResponseRedirect(reverse("kolibri:core:redirect_user"), lang_code)
 
 
 def get_urls_by_role(role):
@@ -127,14 +127,6 @@ def get_url_by_role(role, first_login):
 
     if obj:
         return obj.url
-
-# Strips the language code from a given path
-def strip_language_path(path):
-    lang_code = get_language_from_path(path)
-    if lang_code:
-        # Replace the first instance of `code/` with nothing
-        path = path.replace("{}/".format(lang_code), "", 1)
-    return path
 
 class GuestRedirectView(View):
     def get(self, request):
@@ -187,10 +179,6 @@ class RootURLRedirectView(View):
         else:
             url = get_url_by_role(user_kinds.ANONYMOUS, first_login)
         if url:
-            # We strip the language path from the url. This causes a new redirect which ensures
-            # that the user's selected language code is prepended to this url to avoid having
-            # a user's language setting get stuck in the set default language code's path.
-            url = strip_language_path(url)
             return HttpResponseRedirect(url)
         raise Http404(
             _(
