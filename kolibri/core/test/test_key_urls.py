@@ -14,6 +14,7 @@ from kolibri.core.auth.test.test_api import DUMMY_PASSWORD
 from kolibri.core.auth.test.test_api import FacilityFactory
 from kolibri.core.auth.test.test_api import FacilityUserFactory
 from kolibri.deployment.default.urls import urlpatterns
+from kolibri.core.device.translation import get_settings_language
 
 
 class KolibriTagNavigationTestCase(APITestCase):
@@ -154,3 +155,21 @@ class AllUrlsTest(APITestCase):
         self.check_responses(
             credentials={"username": user.username, "password": DUMMY_PASSWORD}
         )
+
+    def test_logout_language_persistence(self):
+        facility = FacilityFactory.create()
+        user = create_superuser(facility)
+        credentials = {"username": user.username, "password": DUMMY_PASSWORD}
+
+        # Test a few language codes
+        for lang_code in ['sw-tz', 'fr-fr', 'es-es']:
+            self.client.login(**credentials)
+            response = self.client.post("/{}/logout".format(lang_code))
+            self.assertTrue(lang_code in response.url)
+
+        # Test /logout without any in-path language code.
+        # In test - this will default to the settings language
+        self.client.login(**credentials)
+        response = self.client.post("/logout")
+        self.assertTrue(get_settings_language() in response.url)
+
