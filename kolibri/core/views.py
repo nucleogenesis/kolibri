@@ -127,6 +127,7 @@ def get_url_by_role(role, first_login):
     if obj:
         return obj.url
 
+
 class GuestRedirectView(View):
     def get(self, request):
         """

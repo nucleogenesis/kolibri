@@ -156,6 +156,7 @@ class AllUrlsTest(APITestCase):
             credentials={"username": user.username, "password": DUMMY_PASSWORD}
         )
 
+
 class LogoutLanguagePersistenceTest(APITestCase):
     def setUp(self):
         provision_device()
@@ -166,7 +167,7 @@ class LogoutLanguagePersistenceTest(APITestCase):
     def test_persistent_language_on_namespaced_logout(self):
         # Test that namespaced /{lang_code}/logout persists that namespace.
         # Test a few language codes
-        for lang_code in ['sw-tz', 'fr-fr', 'es-es']:
+        for lang_code in ["sw-tz", "fr-fr", "es-es"]:
             self.client.login(**self.credentials)
             response = self.client.post("/{}/logout".format(lang_code))
             self.assertTrue(lang_code in response.url)
@@ -181,17 +182,19 @@ class LogoutLanguagePersistenceTest(APITestCase):
         # Test when set on a cookie.
         from django.http.cookie import SimpleCookie
         from django.conf import settings
+
         self.client.login(**self.credentials)
         self.client.cookies = SimpleCookie({settings.LANGUAGE_COOKIE_NAME: "fr-fr"})
         response = self.client.post("/logout")
-        self.assertTrue('fr-fr' in response.url)
+        self.assertTrue("fr-fr" in response.url)
 
     def test_persistent_session_language_setting_on_logout(self):
         # Test when set on a session.
         from django.utils.translation import LANGUAGE_SESSION_KEY
+
         self.client.login(**self.credentials)
         session = self.client.session
-        session[LANGUAGE_SESSION_KEY] = 'sw-tz'
+        session[LANGUAGE_SESSION_KEY] = "sw-tz"
         session.save()
         response = self.client.post("/logout")
-        self.assertTrue('sw-tz' in response.url)
+        self.assertTrue("sw-tz" in response.url)
