@@ -50,7 +50,9 @@
     right: 0;
     bottom: 0;
     left: 0;
-    z-index: 8; // material - Bottom app bar
+    // 1062 is the magic number fixing collision
+    // with perseus renderer in quiz preview
+    z-index: 1062;
     height: 72px;
     padding: 8px 16px;
     margin: 0;
