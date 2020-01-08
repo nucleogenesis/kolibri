@@ -1,0 +1,7 @@
+{
+  "name": "qti-exercise-renderer",
+  "description": "A plugin for rendering QTI questions",
+  "private": true,
+  "dependencies": {
+  }
+}
