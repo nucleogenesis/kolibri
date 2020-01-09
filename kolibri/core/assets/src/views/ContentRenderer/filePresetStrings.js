@@ -22,6 +22,7 @@ const filePresetStrings = {
   epub: 'ePub Document ({fileSize})',
   slideshow_manifest: 'Slideshow ({fileSize})',
   slideshow_image: 'Slideshow image ({fileSize})',
+  exercise_xml: 'QTI XML ({fileSize})',
 };
 
 const filePresetTranslator = createTranslator('FilePresetStrings', filePresetStrings);

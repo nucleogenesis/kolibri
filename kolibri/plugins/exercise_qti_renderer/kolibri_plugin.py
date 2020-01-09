@@ -16,4 +16,4 @@ class ExerciseQTIRendererPlugin(KolibriPluginBase):
 @register_hook
 class ExerciseQTIRendererAsset(content_hooks.ContentRendererHook):
     bundle_id = "main"
-    presets = (format_presets.EXERCISE,)
+    presets = (format_presets.EXERCISE_XML,)

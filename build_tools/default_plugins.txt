@@ -11,3 +11,4 @@ kolibri_exercise_perseus_plugin
 kolibri.plugins.epub_viewer
 kolibri.plugins.default_theme
 kolibri.plugins.slideshow_viewer
+kolibri.plugins.exercise_qti_renderer
