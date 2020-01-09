@@ -1,4 +1,5 @@
 {
+  "version": "0.1.0",
   "name": "qti-exercise-renderer",
   "description": "A plugin for rendering QTI questions",
   "private": true,
