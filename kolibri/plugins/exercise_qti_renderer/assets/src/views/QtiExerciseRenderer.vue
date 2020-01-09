@@ -9,37 +9,10 @@
 
 <script>
 
+  import client from 'kolibri.client';
   import AssessmentItem from './AssessmentItem';
   import AssessmentSection from './AssessmentSection';
   import AssessmentTest from './AssessmentTest';
-
-  const xml = `<assessmentTest>
-      <assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/qti/qtiv2p1/imsqti_v2p1.xsd" identifier="choice" title="Unattended Luggage" adaptive="false" timeDependent="false">
-      <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier">
-      <correctResponse>
-      <value>ChoiceA</value>
-      </correctResponse>
-      </responseDeclaration>
-      <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float">
-      <defaultValue>
-      <value>0</value>
-      </defaultValue>
-      </outcomeDeclaration>
-      <itemBody>
-      <p>Look at the text in the picture.</p>
-      <p>
-      <img src="images/sign.png" alt="NEVER LEAVE LUGGAGE UNATTENDED"/>
-      </p>
-      <choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="1">
-      <prompt>What does it say?</prompt>
-      <simpleChoice identifier="ChoiceA">You must stay with your luggage at all times.</simpleChoice>
-      <simpleChoice identifier="ChoiceB">Do not let someone else look after your luggage.</simpleChoice>
-      <simpleChoice identifier="ChoiceC">Remember your luggage when you leave.</simpleChoice>
-      </choiceInteraction>
-      </itemBody>
-      <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
-      </assessmentItem>
-      </assessmentTest>`;
 
   export default {
     name: 'QtiExerciseRenderer',
@@ -53,8 +26,12 @@
     }),
     mounted() {
       const parser = new DOMParser();
-      const DOM = parser.parseFromString(xml, 'text/xml');
-      this.children = DOM.children;
+      const method = 'GET';
+      const path = this.defaultFile.storage_url;
+      client({ path, method }).then(({ entity }) => {
+        const DOM = parser.parseFromString(entity, 'text/xml');
+        this.children = DOM.children;
+      });
     },
   };
 
