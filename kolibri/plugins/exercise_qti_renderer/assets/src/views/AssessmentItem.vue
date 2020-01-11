@@ -2,10 +2,8 @@
 
   <div>
     <ItemBody
-      v-for="child in children"
-      v-if="child.tagName=='itemBody'"
-      :key="child.id"
-      :dom="child"
+      v-if="itemBody"
+      :dom="itemBody"
       @submit="$emit('submit', $event)"
     />
   </div>
@@ -15,6 +13,7 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
   import domMixin from '../mixins/domMixin';
   import ItemBody from './ItemBody';
 
@@ -23,6 +22,12 @@
       ItemBody,
     },
     mixins: [domMixin],
+    computed: {
+      ...mapGetters('qti_exercise', ['currentAssessmentItem']),
+      itemBody() {
+        return this.currentAssessmentItem.itemBody;
+      },
+    },
   };
 
 </script>

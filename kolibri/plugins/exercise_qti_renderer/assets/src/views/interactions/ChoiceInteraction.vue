@@ -3,11 +3,12 @@
   <form @submit.prevent="$emit('submit', $event)">
     <Prompt v-for="prompt in prompts" :key="prompt.id" :dom="prompt" />
 
-    <k-radio-button
+    <KRadioButton
       v-for="(choice, index) in choices"
       :key="index"
       v-model="response"
       :label="choice.textContent"
+      :value="false"
       :radiovalue="choice.attributes.identifier.value"
       @change="$emit('submit', response)"
     />
