@@ -1,15 +1,10 @@
 <template>
 
-  <div :style="{ 'background-color': bgColor, color: textColor, transform: transformDef}">
-    <component
-      :is="child.tagName"
-      v-for="child in children"
-      :key="child.id"
-      :dom="child"
-      @submit="checkAnswer($event)"
-    />
-    <button v-if="answered" class="transform-button" @click="transform">
-      TRANSFORM!
+  <div>
+    <AssessmentItem />
+    <KButton @click="$store.dispatch('qti_exercise/advanceToNextItem')" />
+    >
+
     </button>
   </div>
 
@@ -36,11 +31,7 @@
         answered: false,
       };
     },
-    computed: {
-      transformDef() {
-        return `rotate(0.${this.rotationDegree}turn)`;
-      },
-    },
+    computed: {},
     methods: {
       checkAnswer(answer) {
         const correctAnswer = this.dom.querySelector('correctResponse').textContent.trim();

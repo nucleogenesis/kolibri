@@ -1,8 +1,7 @@
 <template>
 
   <div>
-    <h1>Hello Component World</h1>
-    <component :is="child.tagName" v-for="child in children" :key="child.id" :dom="child" />
+    <AssessmentTest />
   </div>
 
 </template>
@@ -10,6 +9,7 @@
 <script>
 
   import client from 'kolibri.client';
+  import { mapGetters } from 'vuex';
   import AssessmentItem from './AssessmentItem';
   import AssessmentSection from './AssessmentSection';
   import AssessmentTest from './AssessmentTest';
@@ -30,7 +30,7 @@
       const path = this.defaultFile.storage_url;
       client({ path, method }).then(({ entity }) => {
         const DOM = parser.parseFromString(entity, 'text/xml');
-        this.children = DOM.children;
+        this.$store.commit('qti_exercise/INITIALIZE', DOM.children);
       });
     },
   };
