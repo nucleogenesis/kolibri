@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <div v-for="child in children" :key="child.id">
+    <div v-for="(child, index) in children" :key="index">
       <div v-if="isValidHtml(child)" v-html="htmlSerialize(child)">
       </div>
 
