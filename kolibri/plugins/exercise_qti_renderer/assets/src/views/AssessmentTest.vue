@@ -2,8 +2,12 @@
 
   <div>
     <AssessmentItem />
-    <KButton @click="$store.dispatch('qti_exercise/advanceToNextItem')" />
-    >
+    <KButton @click="$store.dispatch('qti_exercise/previousAssessmentItem')">
+      Back
+    </KButton>
+    <KButton @click="$store.dispatch('qti_exercise/nextAssessmentItem')">
+      Continue
+    </KButton>
 
     </button>
   </div>
