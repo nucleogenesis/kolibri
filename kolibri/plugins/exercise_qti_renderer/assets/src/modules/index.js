@@ -43,6 +43,10 @@ function convertInitialPayloadToState(dom) {
   // From the testParts we can get all assessmentSections(Refs) and
   // assessmentItems(Refs) and build an easy-to-use object for the state.
   const testParts = objectifyTestParts(testPartElements);
+  // IMPLEMENT SHUFFLE HERE?
+  // REFACTOR ENTIRE DATA STRUCTURE?
+  // CONSIDER ALL OPTIONS
+  // TODO: Reconsider the data structure!
 
   const firstTestPartIdentifier = Object.keys(testParts).find(k => testParts[k].order === 0);
   const firstTestPart = testParts[firstTestPartIdentifier];
@@ -65,6 +69,13 @@ function convertInitialPayloadToState(dom) {
       assessmentSection: firstAssessmentSection,
       assessmentItem: firstAssessmentItem,
     },
+    testProgressHistory: [
+      {
+        testPart: firstTestPart.identifier,
+        assessmentSection: firstAssessmentSection.identifier,
+        assessmentItem: firstAssessmentItem.identifier,
+      },
+    ],
     initialized: true,
   };
 }
@@ -184,9 +195,13 @@ export default {
       assessmentSection: {},
       assessmentItem: {},
     },
+    // Tracks an array of the order in which items were shown
+    testProgressHistory: [],
+    userCanGoBack: true,
   },
   actions: {
-    advanceToNextItem({ commit, getters, state }) {
+    nextAssessmentItem({ commit, getters, state }) {
+      const currentProgress = Object.assign({}, state.testProgressHistory);
       // If this isn't the last item in the current section, we bump it and move along
       if (!getters.currentItemIsLastItem) {
         const nextItemKey = Object.keys(getters.currentAssessmentSection.assessmentItems).find(
@@ -194,10 +209,10 @@ export default {
             getters.currentAssessmentSection.assessmentItems[k].order ===
             state.testProgress.assessmentItem.order + 1
         );
-        commit(
-          'SET_ASSESSMENT_ITEM',
-          getters.currentAssessmentSection.assessmentItems[nextItemKey]
-        );
+        const nextItem = getters.currentAssessmentSection.assessmentItems[nextItemKey];
+        currentProgress.assessmentItem = nextItemKey;
+        commit('SET_ASSESSMENT_ITEM', nextItem);
+        commit('ADD_NEW_HISTORY', currentProgress);
         return;
       }
       // Now we know we've hit the last item in the current section.
@@ -214,7 +229,11 @@ export default {
         const nextItemKey = Object.keys(nextSession.assessmentItems).find(
           k => nextSession.assessmentItems[k].order === 0
         );
-        commit('SET_ASSESSMENT_ITEM', nextSession.assessmentItems[nextItemKey]);
+        const nextItem = nextSession.assessmentItems[nextItemKey];
+        currentProgress.assessmentSection = nextSessionKey;
+        currentProgress.assessmentItem = nextItemKey;
+        commit('SET_ASSESSMENT_ITEM', nextItem);
+        commit('ADD_NEW_HISTORY', currentProgress);
         return;
       }
       // Now we've finished the current session and the current part - lets see if we have another.
@@ -236,9 +255,32 @@ export default {
           k => nextSession.assessmentItems[k].order === 0
         );
         const nextItem = nextSession.assessmentItems[nextItemKey];
+
+        currentProgress.testPart = nextPartKey;
+        currentProgress.assessmentSection = nextSessionKey;
+        currentProgress.assessmentItem = nextItemKey;
+
         commit('SET_ASSESSMENT_ITEM', nextItem);
+        commit('ADD_NEW_HISTORY', currentProgress);
         return;
       }
+    },
+    // Sets the current progress to the newest item in the testProgressHistory
+    // and removes that entry from testProgressHistory
+    previousAssessmentItem({ commit, state, getters }) {
+      if (getters.onFirstQuestion) {
+        // Can't go back when on the first question
+        return;
+      }
+      const targetHistory = state.testProgressHistory[state.testProgressHistory.length - 2];
+
+      console.log(targetHistory);
+
+      const part = state.testParts[targetHistory.testPart];
+      const section = part.assessmentSections[targetHistory.assessmentSection];
+      const item = section.assessmentItems[targetHistory.assessmentItem];
+      commit('SET_CURRENT_TEST_PROGRESS', { part, section, item });
+      commit('GO_BACK_IN_HISTORY');
     },
   },
   mutations: {
@@ -256,42 +298,76 @@ export default {
     },
     SET_TEST_PART(state, payload) {
       state.testProgress.testPart = payload;
-    }
+    },
+    // Expects to receive {part, section, item} objects
+    SET_CURRENT_TEST_PROGRESS(state, payload) {
+      state.testProgress = Object.assign(
+        {},
+        {
+          testPart: payload.part,
+          assessmentSection: payload.section,
+          assessmentItem: payload.item,
+        }
+      );
+    },
+    ADD_NEW_HISTORY(state, payload) {
+      const history = Array.from(state.testProgressHistory);
+      history.push(payload);
+      state.testProgressHistory = history;
+    },
+    GO_BACK_IN_HISTORY(state) {
+      // If the length is 1 then we're on the first question, can't go back
+      if (state.testProgressHistory.length > 1) {
+        state.testProgressHistory = state.testProgressHistory.slice(
+          0,
+          state.testProgressHistory.length - 1
+        );
+      }
+    },
   },
   getters: {
     currentTestPart(state) {
-      if(!state.initialized) return {};
+      if (!state.initialized) return {};
       const testPart = state.testParts[state.testProgress.testPart.identifier];
       return testPart || {};
     },
     currentAssessmentSection(state, getters) {
-      if(!state.initialized) return {};
-      return getters.currentTestPart.assessmentSections[state.testProgress.assessmentSection.identifier] || {};
+      if (!state.initialized) return {};
+      return (
+        getters.currentTestPart.assessmentSections[
+          state.testProgress.assessmentSection.identifier
+        ] || {}
+      );
     },
     currentAssessmentItem(state, getters) {
-      if(!state.initialized) return {};
+      if (!state.initialized) return {};
       return (
-        getters.currentAssessmentSection.assessmentItems[state.testProgress.assessmentItem.identifier] || {}
+        getters.currentAssessmentSection.assessmentItems[
+          state.testProgress.assessmentItem.identifier
+        ] || {}
       );
     },
     currentItemIsLastItem(state, getters) {
-      if(!state.initialized) return {};
+      if (!state.initialized) return {};
       return (
         getters.currentAssessmentItem.order ===
         Object.keys(getters.currentAssessmentSection.assessmentItems).length - 1
       );
     },
     currentSectionIsLastSection(state, getters) {
-      if(!state.initialized) return {};
+      if (!state.initialized) return {};
       return (
         getters.currentAssessmentSection.order ===
         Object.keys(getters.currentTestPart.assessmentSections).length - 1
       );
     },
     currentPartIsLastPart(state, getters) {
-      if(!state.initialized) return {};
+      if (!state.initialized) return {};
       return getters.currentTestPart.order === Object.keys(state.testParts).length - 1;
     },
+    onFirstQuestion(state) {
+      return state.testProgressHistory.length === 1;
+    }
   },
 };
 
