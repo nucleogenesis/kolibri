@@ -1,4 +1,5 @@
 import client from 'kolibri.client';
+import Vue from 'vue';
 
 const PARSER = new DOMParser();
 
@@ -64,6 +65,7 @@ function convertInitialPayloadToState(dom) {
   return {
     dom: dom[0],
     testParts,
+    testResponses: {},
     testProgress: {
       testPart: firstTestPart,
       assessmentSection: firstAssessmentSection,
@@ -165,7 +167,7 @@ function objectifyAssessmentItems(items) {
 
     obj[identifier] = {
       identifier,
-      responseDeclaration,
+      responseDeclaration: objectifyResponseDeclaration(responseDeclaration),
       outcomeDeclaration,
       itemBody,
       stylesheet,
@@ -176,6 +178,16 @@ function objectifyAssessmentItems(items) {
     };
     return obj;
   }, {});
+}
+
+function objectifyResponseDeclaration(items) {
+  const correctResponse = getChildByTag(items[0], 'correctResponse');
+  const valueNode = getChildByTag(correctResponse, 'value');
+  if (valueNode) {
+    return { correctResponseIdentifier: valueNode.textContent };
+  } else {
+    return { correctResponseIdentifier: null };
+  }
 }
 
 const DEFUALT_STATE = {
@@ -189,6 +201,7 @@ export default {
     initialized: false,
     dom: null,
     testParts: {},
+    testResponses: {},
     // Each value indicates the identifier of the current node
     testProgress: {
       testPart: {},
@@ -201,7 +214,7 @@ export default {
   },
   actions: {
     nextAssessmentItem({ commit, getters, state }) {
-      const currentProgress = Object.assign({}, state.testProgressHistory);
+      const currentProgress = Object.assign({}, state.testProgress);
       // If this isn't the last item in the current section, we bump it and move along
       if (!getters.currentItemIsLastItem) {
         const nextItemKey = Object.keys(getters.currentAssessmentSection.assessmentItems).find(
@@ -274,13 +287,18 @@ export default {
       }
       const targetHistory = state.testProgressHistory[state.testProgressHistory.length - 2];
 
-      console.log(targetHistory);
-
       const part = state.testParts[targetHistory.testPart];
       const section = part.assessmentSections[targetHistory.assessmentSection];
       const item = section.assessmentItems[targetHistory.assessmentItem];
       commit('SET_CURRENT_TEST_PROGRESS', { part, section, item });
       commit('GO_BACK_IN_HISTORY');
+    },
+    processResponse({ commit, getters }, payload) {
+      const itemIdentifier = getters.currentAssessmentItem.identifier;
+      commit('UPDATE_RESPONSE', {
+        itemIdentifier,
+        value: payload,
+      });
     },
   },
   mutations: {
@@ -291,24 +309,22 @@ export default {
       Object.assign(state, DEFUALT_STATE);
     },
     SET_ASSESSMENT_ITEM(state, payload) {
-      state.testProgress.assessmentItem = payload;
+      Vue.set(state.testProgress, 'assessmentItem', payload);
     },
     SET_ASSESSMENT_SECTION(state, payload) {
-      state.testProgress.assessmentSection = payload;
+      Vue.set(state.testProgress, 'assessmentSection', payload);
     },
     SET_TEST_PART(state, payload) {
-      state.testProgress.testPart = payload;
+      Vue.set(state.testProgress, 'testPart', payload);
     },
     // Expects to receive {part, section, item} objects
     SET_CURRENT_TEST_PROGRESS(state, payload) {
-      state.testProgress = Object.assign(
-        {},
-        {
-          testPart: payload.part,
-          assessmentSection: payload.section,
-          assessmentItem: payload.item,
-        }
-      );
+      const newProgress = {
+        testPart: payload.part,
+        assessmentSection: payload.section,
+        assessmentItem: payload.item,
+      };
+      Vue.set(state, 'testProgress', newProgress);
     },
     ADD_NEW_HISTORY(state, payload) {
       const history = Array.from(state.testProgressHistory);
@@ -318,11 +334,13 @@ export default {
     GO_BACK_IN_HISTORY(state) {
       // If the length is 1 then we're on the first question, can't go back
       if (state.testProgressHistory.length > 1) {
-        state.testProgressHistory = state.testProgressHistory.slice(
-          0,
-          state.testProgressHistory.length - 1
-        );
+        state.testProgressHistory = [
+          ...state.testProgressHistory.slice(0, state.testProgressHistory.length - 1),
+        ];
       }
+    },
+    UPDATE_RESPONSE(state, payload) {
+      state.testResponses = { ...state.testResponses, [payload.itemIdentifier]: payload.value };
     },
   },
   getters: {
@@ -367,7 +385,10 @@ export default {
     },
     onFirstQuestion(state) {
       return state.testProgressHistory.length === 1;
-    }
+    },
+    responseForCurrentItem(state, getters) {
+      return state.testResponses[getters.currentAssessmentItem.identifier];
+    },
   },
 };
 

@@ -3,6 +3,7 @@
   <div>
     <ItemBody
       v-if="itemBody"
+      :key="currentAssessmentItem.identifier"
       :dom="itemBody"
       @submit="$emit('submit', $event)"
     />
