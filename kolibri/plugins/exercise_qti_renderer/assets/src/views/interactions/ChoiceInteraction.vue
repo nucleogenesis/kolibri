@@ -31,36 +31,29 @@
     components: {
       Prompt,
     },
-    mixins: [domMixin],
-    props: {
-      dom: Element,
-    },
     data() {
       return {
         response: '',
       };
     },
-    mounted() {
-      console.log('mounting')
-      this.response = this.responseForCurrentItem || '';
-    },
-    beforeDestroy(){
-      console.log('destroying')
-    },
+    mixins: [domMixin],
     computed: {
       ...mapGetters('qti_exercise', ['currentAssessmentItem', 'responseForCurrentItem']),
       prompts() {
         // Not sure there could ever be more than one.
-        return this.children.filter(element => element.tagName === 'prompt');
+        return Array.from(this.children).filter(element => element.tagName === 'prompt');
       },
       choices() {
-        return this.children.filter(element => element.tagName === 'simpleChoice');
+        return this.currentAssessmentItem.itemBody.responseOptions;
       },
     },
     watch: {
       response() {
         this.saveResponse();
       },
+    },
+    mounted() {
+      this.response = this.responseForCurrentItem || '';
     },
     methods: {
       saveResponse() {

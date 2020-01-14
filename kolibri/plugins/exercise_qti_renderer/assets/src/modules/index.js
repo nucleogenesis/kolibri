@@ -3,6 +3,11 @@ import Vue from 'vue';
 
 const PARSER = new DOMParser();
 
+const SHUFFLEABLE_INTERACTION_TAGS = ['choiceInteraction'];
+const SHUFFLEABLE_CHILDREN_MAP = {
+  choiceInteraction: ['simpleChoice'],
+};
+
 //----------//
 // fetching //
 // ---------//
@@ -15,6 +20,16 @@ function fetchAssessmentItemRef(item) {
   const path = urlFromHash(item.attributes['href'].value);
   const method = 'GET';
   return client({ path, method });
+}
+
+function shuffleArray(array) {
+  for (var i = array.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
+  }
+  return array;
 }
 
 //----------//
@@ -169,7 +184,7 @@ function objectifyAssessmentItems(items) {
       identifier,
       responseDeclaration: objectifyResponseDeclaration(responseDeclaration),
       outcomeDeclaration,
-      itemBody,
+      itemBody: objectifyItemBody(itemBody),
       stylesheet,
       responseProcessing,
       title,
@@ -178,6 +193,58 @@ function objectifyAssessmentItems(items) {
     };
     return obj;
   }, {});
+}
+
+function objectifyItemBody(itemBody) {
+  // Should only be one interaction per itemBody
+  const interaction = Array.from(itemBody.children).filter(e =>
+    SHUFFLEABLE_INTERACTION_TAGS.includes(e.tagName)
+  )[0];
+
+  const shuffleableElements = Array.from(interaction.children).filter(c => {
+    return SHUFFLEABLE_CHILDREN_MAP[interaction.tagName].includes(c.tagName);
+  })
+  const fixedIndices = shuffleableElements.map(c => c.attributes.getNamedItem('fixed'));
+  const shuffledItems = shuffleArray(
+    shuffleableElements.filter(e => !e.attributes.getNamedItem('fixed'))
+  );
+  const shuffledWithFixedItems = fixedIndices.map((isFixed, idx) => {
+    if (isFixed) {
+      return shuffleableElements[idx];
+    } else {
+      return shuffledItems.pop();
+    }
+  });
+
+  /*
+  const shuffledInteractableElements = Array.from(itemBody.children).reduce((obj, element) => {
+    if (SHUFFLEABLE_INTERACTION_TAGS.includes(element.tagName)) {
+      const shuffleableElements = Array.from(element.children).filter(
+        e => e.tagName === SHUFFLEABLE_CHILDREN_MAP[element.tagName]
+      );
+      // Either null or 'fixed' values mapped here treat 'fixed' as boolean true.
+      // Basically we track the position of the "fixed" items so we can plug them in later
+      const fixedIndices = shuffleableElements.map(c => c.attributes.getNamedItem('fixed'));
+      // Exclude items with the "fixed" value from those which we shuffle.
+      const shuffledItems = shuffleArray(
+        shuffleableElements.filter(e => !e.attributes.getNamedItem('fixed'))
+      );
+      const shuffledWithFixedItems = fixedIndices.map((isFixed, idx) => {
+        if (isFixed) {
+          // This index should be the "fixed" option so we plug that one in
+          return shuffleableElements[idx];
+        } else {
+          // Just grab one of the shuffled items and map it in.
+          return shuffledItems.pop();
+        }
+      });
+    }
+  }, []);
+  */
+  return {
+    element: itemBody,
+    responseOptions: shuffledWithFixedItems,
+  };
 }
 
 function objectifyResponseDeclaration(items) {
@@ -391,10 +458,3 @@ export default {
     },
   },
 };
-
-/**
- * what I need to be able to do:
- *
- * - SET the state of the quiz to a specific test part, test section, or test item
- * - GET the __NEXT__ item where the order is followed as expected.
- */
