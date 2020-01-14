@@ -4,7 +4,7 @@
     <ItemBody
       v-if="itemBody"
       :key="currentAssessmentItem.identifier"
-      :dom="itemBody"
+      :dom="itemBody.element"
       @submit="$emit('submit', $event)"
     />
   </div>
