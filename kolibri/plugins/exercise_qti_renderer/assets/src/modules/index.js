@@ -203,7 +203,7 @@ function objectifyItemBody(itemBody) {
 
   const shuffleableElements = Array.from(interaction.children).filter(c => {
     return SHUFFLEABLE_CHILDREN_MAP[interaction.tagName].includes(c.tagName);
-  })
+  });
   const fixedIndices = shuffleableElements.map(c => c.attributes.getNamedItem('fixed'));
   const shuffledItems = shuffleArray(
     shuffleableElements.filter(e => !e.attributes.getNamedItem('fixed'))
@@ -241,8 +241,12 @@ function objectifyItemBody(itemBody) {
     }
   }, []);
   */
+
   return {
     element: itemBody,
+    cardinality: interaction.getAttribute('cardinality'),
+    maxChoices: interaction.getAttribute('maxChoices'),
+    responseIdentifier: interaction.getAttribute('responseIdentifier'),
     responseOptions: shuffledWithFixedItems,
   };
 }

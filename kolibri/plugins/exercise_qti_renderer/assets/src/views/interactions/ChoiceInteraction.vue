@@ -5,8 +5,11 @@
 
     {{ currentAssessmentItem.title }}
 
+    <ChoiceMultiple v-if="isMultiple" :dom="dom" :choices="choices" />
+
     <KRadioButton
       v-for="(choice) in choices"
+      v-else
       :key="choice.attributes.identifier.value"
       :label="choice.textContent"
       :value="choice.attributes.identifier.value"
@@ -25,18 +28,20 @@
   import { mapGetters } from 'vuex';
   import domMixin from '../../mixins/domMixin';
   import Prompt from './Prompt';
+  import ChoiceMultiple from './ChoiceMultiple';
 
   export default {
     name: 'ChoiceInteraction',
     components: {
       Prompt,
+      ChoiceMultiple
     },
+    mixins: [domMixin],
     data() {
       return {
         response: '',
       };
     },
-    mixins: [domMixin],
     computed: {
       ...mapGetters('qti_exercise', ['currentAssessmentItem', 'responseForCurrentItem']),
       prompts() {
@@ -45,6 +50,9 @@
       },
       choices() {
         return this.currentAssessmentItem.itemBody.responseOptions;
+      },
+      isMultiple() {
+        return this.currentAssessmentItem.itemBody.cardinality === 'multiple';
       },
     },
     watch: {
