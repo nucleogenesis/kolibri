@@ -218,7 +218,8 @@
     max-width: 200px;
     // overflow-x hidden seems to affect overflow-y also, so include a fixed height
     height: 16px;
-    overflow-x: hidden;
+    // hide both overflows to avoid inadvertain scroll buttons when zoomed
+    overflow: hidden;
     text-overflow: ellipsis;
   }
 
