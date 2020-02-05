@@ -3,57 +3,57 @@
   <!-- eslint-disable max-len -->
 
   <!-- tracking -->
-  <mat-svg v-if="icon === 'correct'" name="check_circle" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'helpNeeded'" name="error" category="alert" :style="style" />
-  <mat-svg v-else-if="icon === 'hint'" name="lightbulb_outline" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'incorrect'" name="close" category="navigation" :style="style" />
-  <mat-svg v-else-if="icon === 'inProgress'" name="access_time" category="device" :style="style" />
-  <mat-svg v-else-if="icon === 'mastered'" name="stars" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'notStarted'" name="brightness_1" category="image" :style="style" />
-  <mat-svg v-else-if="icon === 'rectified'" name="lens" category="image" :style="style" />
+  <file-svg v-if="icon === 'correct'" src="/svg/check_circle/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'helpNeeded'" src="/svg/warning/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'hint'" src="/svg/lightbulb/outline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'incorrect'" src="/svg/cancel/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'inProgress'" src="/svg/access_time/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'mastered'" src="/svg/stars/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'notStarted'" src="/svg/brightness_1/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'rectified'" src="/svg/lens/baseline.svg" :style="style" />
   <!-- coaching -->
-  <mat-svg v-else-if="icon === 'coach'" name="local_library" category="maps" :style="style" />
-  <mat-svg v-else-if="icon === 'lesson'" name="import_contacts" category="communication" :style="style" />
-  <mat-svg v-else-if="icon === 'question'" name="keyboard_arrow_right" category="hardware" :style="style" :class="flip" />
-  <mat-svg v-else-if="icon === 'quiz'" name="assignment_late" category="action" :style="style" />
+  <file-svg v-else-if="icon === 'coach'" src="/svg/local_library/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'lesson'" src="/svg/import_contacts/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'question'" src="/svg/keyboard_arrow_right/baseline.svg" :style="style" :class="flip" />
+  <file-svg v-else-if="icon === 'quiz'" src="/svg/assignment_late/baseline.svg" :style="style" />
   <!-- content -->
-  <mat-svg v-else-if="icon === 'app' || icon === 'html5'" name="widgets" category="device" :style="style" />
-  <mat-svg v-else-if="icon === 'audio'" name="audiotrack" category="image" :style="style" />
-  <mat-svg v-else-if="icon === 'channel'" name="apps" category="navigation" :style="style" />
-  <mat-svg v-else-if="icon === 'doc' || icon === 'document'" name="book" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'exercise'" name="assignment" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'topic'" name="folder" category="file" :style="style" />
-  <mat-svg v-else-if="icon === 'video'" name="ondemand_video" category="notification" :style="style" />
-  <mat-svg v-else-if="icon === 'slideshow'" name="photo_library" category="image" :style="style" />
-  <mat-svg v-else-if="icon === 'unlistedchannel'" name="lock_open" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'multiple'" name="view_module" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'done'" name="done" category="action" :style="style" />
+  <file-svg v-else-if="icon === 'app' || icon === 'html5'" src="/svg/widgets/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'audio'" src="/svg/audiotrack/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'channel'" src="/svg/apps/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'doc' || icon === 'document'" src="/svg/book/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'exercise'" src="/svg/assignment/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'topic'" src="/svg/folder/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'video'" src="/svg/ondemand_video/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'slideshow'" src="/svg/photo_library/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'unlistedchannel'" src="/svg/lock_open/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'multiple'" src="/svg/view_module/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'done'" src="/svg/done/baseline.svg" :style="style" />
   <!-- users -->
-  <mat-svg v-else-if="icon === 'classroom'" name="business" category="communication" :style="style" />
-  <mat-svg v-else-if="icon === 'group'" category="action" name="group_work" :style="style" />
-  <mat-svg v-else-if="icon === 'people'" name="people" category="social" :style="style" />
-  <mat-svg v-else-if="icon === 'person'" name="person" category="social" :style="style" />
-  <mat-svg v-else-if="icon === 'permission'" name="vpn_key" category="communication" :style="style" />
+  <file-svg v-else-if="icon === 'classroom'" src="/svg/business/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'group'" src="/svg/group_work/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'people'" src="/svg/people/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'person'" src="/svg/person/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'permission'" src="/svg/vpn_key/baseline.svg" :style="style" />
   <!-- misc -->
-  <mat-svg v-else-if="icon === 'dot'" name="brightness_1" category="image" :style="style" />
-  <mat-svg v-else-if="icon === 'error'" name="error" category="alert" :style="style" />
+  <file-svg v-else-if="icon === 'dot'" src="/svg/brightness_1/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'error'" src="/svg/error/baseline.svg" :style="style" />
   <!-- UI -->
-  <mat-svg v-else-if="icon === 'back'" name="arrow_back" category="navigation" :style="style" :class="flip" />
-  <mat-svg v-else-if="icon === 'forward'" name="arrow_forward" category="navigation" :style="style" :class="flip" />
-  <mat-svg v-else-if="icon === 'clear'" name="clear" category="content" :style="style" />
-  <mat-svg v-else-if="icon === 'dropdown'" name="arrow_drop_down" category="navigation" :style="style" />
-  <mat-svg v-else-if="icon === 'language'" name="language" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'logout'" name="exit_to_app" category="action" :style="style" :class="flip" />
-  <mat-svg v-else-if="icon === 'menu'" name="menu" category="navigation" :style="style" />
-  <mat-svg v-else-if="icon === 'search'" name="search" category="action" :style="style" />
+  <file-svg v-else-if="icon === 'back'" src="/svg/arrow_back/baseline.svg" :style="style" :class="flip" />
+  <file-svg v-else-if="icon === 'forward'" src="/svg/arrow_forward/baseline.svg" :style="style" :class="flip" />
+  <file-svg v-else-if="icon === 'clear'" src="/svg/clear/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'dropdown'" src="/svg/arrow_drop_down/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'language'" src="/svg/language/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'logout'" src="/svg/exit_to_app/baseline.svg" :style="style" :class="flip" />
+  <file-svg v-else-if="icon === 'menu'" src="/svg/menu/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'search'" src="/svg/search/baseline.svg" :style="style" />
   <!-- side nav -->
-  <mat-svg v-else-if="icon === 'learn'" name="school" category="social" :style="style" />
-  <mat-svg v-else-if="icon === 'device'" name="tablet_mac" category="hardware" :style="style" />
-  <mat-svg v-else-if="icon === 'profile'" name="account_circle" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'login'" name="exit_to_app" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'logout'" name="exit_to_app" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'coach'" name="assessment" category="action" :style="style" />
-  <mat-svg v-else-if="icon === 'facility'" name="settings_input_antenna" category="action" :style="style" />
+  <file-svg v-else-if="icon === 'learn'" src="/svg/school/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'device'" src="/svg/tablet_mac/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'profile'" src="/svg/account_circle/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'login'" src="/svg/exit_to_app/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'logout'" src="/svg/exit_to_app/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'coach'" src="/svg/assessment/baseline.svg" :style="style" />
+  <file-svg v-else-if="icon === 'facility'" src="/svg/settings_input_antenna/baseline.svg" :style="style" />
 
   <!--eslint-enable-->
 
