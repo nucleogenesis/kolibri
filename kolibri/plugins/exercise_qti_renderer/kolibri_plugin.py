@@ -10,7 +10,7 @@ from kolibri.plugins.hooks import register_hook
 
 
 class ExerciseQTIRendererPlugin(KolibriPluginBase):
-    pass
+    untranslated_view_urls = "api_urls"
 
 
 @register_hook
