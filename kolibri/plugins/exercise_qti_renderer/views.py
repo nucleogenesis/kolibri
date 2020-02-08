@@ -7,6 +7,7 @@ from kolibri.core.content.utils.paths import get_content_storage_file_path
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.renderers import JSONRenderer
 
 from .serializers import QtiAssessmentSerializer
 
@@ -15,11 +16,10 @@ class QtiAssessment(APIView):
     TODO: Give this a meaningful description...
     and write tests ...
     """
-
     def get(self, request, content_id):
         tree = ET.parse(get_content_storage_file_path("{}.xml".format(content_id)))
         xml = structure_data_from_tree(tree)
-        data = QtiAssessmentSerializer({"assessmentTest" : xml}).data
+        data = QtiAssessmentSerializer({"xml" : xml.decode('utf-8')}).data
         return Response(data)
 
 def strip_namespaces(root):

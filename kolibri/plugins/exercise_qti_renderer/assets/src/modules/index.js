@@ -1,5 +1,6 @@
 import client from 'kolibri.client';
 import Vue from 'vue';
+import get from 'lodash/get';
 
 const PARSER = new DOMParser();
 
@@ -8,19 +9,13 @@ const SHUFFLEABLE_CHILDREN_MAP = {
   choiceInteraction: ['simpleChoice'],
 };
 
+// TEMP VAR FOR HACKY CONTENT NODE IMPLEMENTATION
+// Used to get ref files that are placed in the same folder as the root
+const STORAGE_PREFIX = '/content/storage/8/4';
+
 //----------//
 // fetching //
 // ---------//
-
-function urlFromHash(filename) {
-  return `${filename[0]}/${filename[1]}/${filename}`;
-}
-
-function fetchAssessmentItemRef(item) {
-  const path = urlFromHash(item.attributes['href'].value);
-  const method = 'GET';
-  return client({ path, method });
-}
 
 function shuffleArray(array) {
   for (var i = array.length - 1; i > 0; i--) {
@@ -51,35 +46,65 @@ function getChildByTag(collection, tag) {
 // helpers
 //------------
 
-function convertInitialPayloadToState(dom) {
+function strToBool(str) {
+  console.log(str);
+  switch (str.toLowerCase().trim()) {
+    case 'true':
+    case '1':
+      return true;
+    case 'false':
+    case '0':
+    case null:
+      return false;
+    default:
+      return Boolean(str);
+  }
+}
+
+/** SECOND PASS - MAPPING AND LINKING */
+function mappify(dom, commit) {
   // NOTE: dom[0] refers to the root <assessmentTest> element
   // Get testParts. These are mutiplicity [1..n]
   const testPartElements = Array.from(dom[0].getElementsByTagName('testPart'));
+  const testParts = testPartElements.map(e => e.attributes['identifier'].value);
+  const testPartsMap = mapTestParts(testPartElements);
 
-  // From the testParts we can get all assessmentSections(Refs) and
-  // assessmentItems(Refs) and build an easy-to-use object for the state.
-  const testParts = objectifyTestParts(testPartElements);
-  // IMPLEMENT SHUFFLE HERE?
-  // REFACTOR ENTIRE DATA STRUCTURE?
-  // CONSIDER ALL OPTIONS
-  // TODO: Reconsider the data structure!
+  // Get all assessmentSections
+  const assessmentSectionElements = Array.from(dom[0].getElementsByTagName('assessmentSection'));
 
-  const firstTestPartIdentifier = Object.keys(testParts).find(k => testParts[k].order === 0);
-  const firstTestPart = testParts[firstTestPartIdentifier];
+  // Get the items now
+  const assessmentItemElements = Array.from(dom[0].getElementsByTagName('assessmentItem'));
 
-  const firstAssessmentSectionIdentifier = Object.keys(firstTestPart.assessmentSections).find(
-    k => firstTestPart.assessmentSections[k].order === 0
-  );
-  const firstAssessmentSection = firstTestPart.assessmentSections[firstAssessmentSectionIdentifier];
+  let assessmentSectionsMap = mapAssessmentSections(assessmentSectionElements);
+  let assessmentItemsMap = mapAssessmentItems(assessmentItemElements);
 
-  const firstAssessmentItemIdentifier = Object.keys(firstAssessmentSection.assessmentItems).find(
-    k => firstAssessmentSection.assessmentItems[k].order === 0
-  );
-  const firstAssessmentItem = firstAssessmentSection.assessmentItems[firstAssessmentItemIdentifier];
+  const firstTestPart = testPartsMap[testParts[0]];
 
-  return {
+  // Need a function to recursively find the next section that has items.
+  // That is the "first section"... that we care about. A wrapping outer
+  // section may exist, but it is irrelevant right
+  function findNextSectionWithItems(sectionId) {
+    const section = assessmentSectionsMap[sectionId];
+    if (get(section, 'assessmentItems', []).length > 0) {
+      return section;
+    } else {
+      if (get(section, 'assessmentSections', []).length > 0) {
+        return findNextSectionWithItems(section.assessmentSections[0]);
+      } else {
+        console.warn('XML has no assessment items.');
+      }
+    }
+  }
+  console.log(dom);
+  const firstAssessmentSection = findNextSectionWithItems(firstTestPart.assessmentSections[0]);
+  const firstAssessmentItem = assessmentItemsMap[firstAssessmentSection.assessmentItems[0]];
+
+  const initialState = {
     dom: dom[0],
     testParts,
+    testPartsMap,
+    assessmentSectionsMap,
+    assessmentItemsMap,
     testResponses: {},
     testProgress: {
       testPart: firstTestPart,
@@ -95,6 +120,104 @@ function convertInitialPayloadToState(dom) {
     ],
     initialized: true,
   };
+
+  commit('INITIALIZE', initialState);
+}
+
+function mapTestParts(elements) {
+  return elements.reduce((obj, elem, idx) => {
+    const identifier = elem.attributes['identifier'].value;
+    const navigationMode = elem.attributes['navigationMode'].value;
+    const submissionMode = elem.attributes['submissionMode'].value;
+
+    // Get the assessmentSections that are direct children
+    const assessmentSections = Array.from(elem.children)
+      // Can get both section and refs because we just want the ID in the right order
+      .filter(child => child.tagName === 'assessmentSection')
+      .map(sec => sec.attributes['identifier'].value);
+
+    console.log(assessmentSections);
+    console.log(Array.from(elem.children));
+
+    obj[identifier] = {
+      identifier,
+      assessmentSections,
+      navigationMode,
+      submissionMode,
+    };
+
+    return obj;
+  }, {});
+}
+
+function mapAssessmentSections(elements) {
+  return elements.reduce((obj, elem, idx) => {
+    const identifier = elem.attributes['identifier'].value;
+    const title = elem.attributes['title'].value;
+    const fixed = elem.attributes['fixed'].value;
+    const visible = elem.attributes['visible'].value;
+
+    // <ordering shuffle=<bool>/> child element determines whether we shuffle children
+    const orderingElem = Array.from(elem.children).filter(e => e.tagName === 'ordering');
+    const shuffle = orderingElem.length
+      ? strToBool(get(orderingElem[0], 'attributes.shuffle').value)
+      : false;
+
+    const assessmentSections = Array.from(elem.children)
+      .filter(child => ['assessmentSection', 'assessmentSectionRef'].includes(child.tagName))
+      .map(e => e.attributes['identifier'].value);
+
+    const assessmentItems = Array.from(elem.children)
+      .filter(child => ['assessmentItem', 'assessmentItemRef'].includes(child.tagName))
+      .map(e => e.attributes['identifier'].value);
+
+    obj[identifier] = {
+      identifier,
+      title,
+      fixed,
+      visible,
+      shuffle,
+      assessmentSections,
+      assessmentItems,
+    };
+
+    return obj;
+  }, {});
+}
+
+function mapAssessmentItems(elements) {
+  return elements.reduce((obj, elem, idx) => {
+    const identifier = elem.attributes['identifier'].value;
+    const title = elem.attributes['title'].value;
+    const adaptive = elem.attributes['adaptive'].value;
+    const timeDependent = elem.attributes['timeDependent'].value;
+    const itemBody = Array.from(elem.children).find(e => e.tagName === 'itemBody');
+    // Can have 0+ repsonse declaration elements
+    const responseDeclarationsElements = Array.from(elem.children).filter(
+      e => e.tagName === 'responseDeclaration'
+    );
+    const outcomeDeclarationsElements = Array.from(elem.children).filter(
+      e => e.tagName === 'outcomeDeclaration'
+    );
+    const stylesheetElements = Array.from(elem.children).filter(e => e.tagName === 'stylesheet');
+    const modalFeedbackElements = Array.from(elem.children).filter(
+      e => e.tagName === 'modalFeedback'
+    );
+
+    obj[identifier] = {
+      identifier,
+      title,
+      adaptive,
+      timeDependent,
+      itemBody,
+      responseDeclarationsElements,
+      outcomeDeclarationsElements,
+      stylesheetElements,
+      modalFeedbackElements,
+    };
+
+    return obj;
+  }, {});
 }
 
 /**
@@ -271,6 +394,9 @@ export default {
   state: {
     initialized: false,
     dom: null,
+    testPartsMap: {},
+    assessmentSectionsMap: {},
+    assessmentItemsMap: {},
     testParts: {},
     testResponses: {},
     // Each value indicates the identifier of the current node
@@ -284,6 +410,10 @@ export default {
     userCanGoBack: true,
   },
   actions: {
+    initialize({ commit }, payload) {
+      mappify(payload, commit);
+    },
+    /*
     nextAssessmentItem({ commit, getters, state }) {
       const currentProgress = Object.assign({}, state.testProgress);
       // If this isn't the last item in the current section, we bump it and move along
@@ -371,10 +501,11 @@ export default {
         value: payload,
       });
     },
+    */
   },
   mutations: {
     INITIALIZE(state, payload) {
-      Object.assign(state, convertInitialPayloadToState(payload));
+      Object.assign(state, payload);
     },
     RESET_STATE(state) {
       Object.assign(state, DEFUALT_STATE);
@@ -415,15 +546,23 @@ export default {
     },
   },
   getters: {
+    currentAssessmentItem(state) {
+      if (!state.initialized) return {};
+      return state.testProgress.assessmentItem;
+    },
+    responseForCurrentItem(state, getters) {
+      return state.testResponses[getters.currentAssessmentItem.identifier];
+    },
+    /*
     currentTestPart(state) {
       if (!state.initialized) return {};
-      const testPart = state.testParts[state.testProgress.testPart.identifier];
+      const testPart = state.testPartsMap[state.testProgress.testPart.identifier];
       return testPart || {};
     },
     currentAssessmentSection(state, getters) {
       if (!state.initialized) return {};
       return (
-        getters.currentTestPart.assessmentSections[
+        getters.currentTestPart.assessmentSectionsMap[
           state.testProgress.assessmentSection.identifier
         ] || {}
       );
@@ -431,7 +570,7 @@ export default {
     currentAssessmentItem(state, getters) {
       if (!state.initialized) return {};
       return (
-        getters.currentAssessmentSection.assessmentItems[
+        getters.currentAssessmentSection.assessmentItemsMap[
           state.testProgress.assessmentItem.identifier
         ] || {}
       );
@@ -460,5 +599,6 @@ export default {
     responseForCurrentItem(state, getters) {
       return state.testResponses[getters.currentAssessmentItem.identifier];
     },
+    */
   },
 };

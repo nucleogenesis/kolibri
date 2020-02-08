@@ -27,10 +27,10 @@
     mounted() {
       const parser = new DOMParser();
       const method = 'GET';
-      const path = this.defaultFile.storage_url;
+      const path = "/exercise_qti_renderer/api/" + this.defaultFile.checksum;
       client({ path, method }).then(({ entity }) => {
-        const DOM = parser.parseFromString(entity, 'text/xml');
-        this.$store.commit('qti_exercise/INITIALIZE', DOM.children);
+        const DOM = parser.parseFromString(entity.xml, 'text/xml');
+        this.$store.dispatch('qti_exercise/initialize', DOM.children);
       });
     },
   };

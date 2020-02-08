@@ -4,7 +4,7 @@
     <ItemBody
       v-if="itemBody"
       :key="currentAssessmentItem.identifier"
-      :dom="itemBody.element"
+      :dom="itemBody"
       @submit="$emit('submit', $event)"
     />
   </div>
@@ -15,14 +15,12 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import domMixin from '../mixins/domMixin';
   import ItemBody from './ItemBody';
 
   export default {
     components: {
       ItemBody,
     },
-    mixins: [domMixin],
     computed: {
       ...mapGetters('qti_exercise', ['currentAssessmentItem']),
       itemBody() {
