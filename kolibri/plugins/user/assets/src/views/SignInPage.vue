@@ -277,9 +277,9 @@
       };
     },
     computed: {
-      ...mapGetters(['facilityConfig', 'selectedFacility', 'isAppContext']),
+      ...mapGetters(['facilityConfig', 'facilities', 'selectedFacility', 'isAppContext']),
       ...mapState(['facilityId']), // backend's default facility on load
-      ...mapState('signIn', ['hasMultipleFacilities']),
+      ...mapState('signIn', ['hasMultipleFacilities', 'usersForSelectedFacilities']),
       ...mapState({
         invalidCredentials: state => state.core.loginError === LoginErrors.INVALID_CREDENTIALS,
         busy: state => state.core.signInBusy,
@@ -289,7 +289,7 @@
       },
       shouldShowUsersList() {
         return (
-          this.usersForCurrentFacility.length <= MAX_USERS_FOR_LISTING_VIEW &&
+          this.facilityConfig.num_users_in_facility <= MAX_USERS_FOR_LISTING_VIEW &&
           this.isAppContext &&
           !this.selectedListUser
         );
@@ -303,9 +303,6 @@
           sug.toLowerCase().startsWith(this.username.toLowerCase())
         );
       },
-      allUsers() {
-        return plugin_data.deviceUsers || [];
-      },
       usernameIsInvalidText() {
         if (this.usernameBlurred || this.formSubmitted) {
           if (this.username === '') {
@@ -317,7 +314,7 @@
         return '';
       },
       usersForCurrentFacility() {
-        return this.allUsers.filter(user => user.facility_id === this.facilityId);
+        return this.usersForSelectedFacilities.filter(user => user.facility_id === this.facilityId);
       },
       usernameIsInvalid() {
         return Boolean(this.usernameIsInvalidText);
@@ -366,6 +363,13 @@
       username(newVal) {
         this.setSuggestionTerm(newVal);
       },
+    },
+    created() {
+      // Only get facilities that meet our criteria for listing the users
+      const facilityIdsToFetch = this.facilities
+        .filter(f => f.dataset.num_users_in_facility <= MAX_USERS_FOR_LISTING_VIEW)
+        .map(f => f.id);
+      this.$store.dispatch('signIn/fetchUsersForFacilities', facilityIdsToFetch);
     },
     mounted() {
       /*
