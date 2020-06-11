@@ -25,5 +25,5 @@ urlpatterns = [
         CalculateImportExportSizeView.as_view(),
         name="importexportsizeview",
     ),
-    url(r"allowremoteaccess", RemoteAccess.as_view(), name="allowremoteaccess",),
+    url(r"allowremoteaccess", RemoteAccess.as_view(), name="allowremoteaccess"),
 ]
