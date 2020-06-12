@@ -291,7 +291,7 @@
       },
       shouldShowUsersList() {
         return (
-          this.facilityConfig.num_users_in_facility <= MAX_USERS_FOR_LISTING_VIEW &&
+          this.selectedFacility.num_users <= MAX_USERS_FOR_LISTING_VIEW &&
           this.isAppContext &&
           !this.selectedListUser
         );
@@ -369,7 +369,7 @@
     created() {
       // Only get facilities that meet our criteria for listing the users
       const facilityIdsToFetch = this.facilities
-        .filter(f => f.dataset.num_users_in_facility <= MAX_USERS_FOR_LISTING_VIEW)
+        .filter(f => f.num_users <= MAX_USERS_FOR_LISTING_VIEW)
         .map(f => f.id);
       this.$store.dispatch('signIn/fetchUsersForFacilities', facilityIdsToFetch);
     },
