@@ -3,7 +3,7 @@
   <div>
     <CoreBase
       v-if="coreBaseRoute"
-      :showDemoBanner="coreBaseRoute"
+      :showDemoBanner="demoBannerRoute"
       :immersivePage="false"
       :immersivePagePrimary="false"
       :fullScreen="coreBaseRoute"
@@ -28,6 +28,14 @@
     mixins: [commonCoreStrings],
     computed: {
       coreBaseRoute() {
+        return [
+          ComponentMap.SIGN_IN,
+          ComponentMap.FACILITY_SELECT,
+          ComponentMap.AUTH_SELECT,
+          ComponentMap.SIGN_UP,
+        ].includes(this.$route.name);
+      },
+      demoBannerRoute() {
         return [
           ComponentMap.SIGN_IN,
           ComponentMap.FACILITY_SELECT,
