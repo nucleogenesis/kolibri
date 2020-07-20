@@ -1,19 +1,39 @@
 <template>
 
-  <router-view />
+  <div>
+    <CoreBase
+      v-if="coreBaseRoute"
+      :showDemoBanner="coreBaseRoute"
+      :immersivePage="false"
+      :immersivePagePrimary="false"
+      :fullScreen="coreBaseRoute"
+    >
+      <router-view />
+    </CoreBase>
+    <router-view v-else />
+  </div>
 
 </template>
 
 
 <script>
 
+  import CoreBase from 'kolibri.coreVue.components.CoreBase';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
   import { ComponentMap } from '../constants';
 
   export default {
     name: 'UserIndex',
+    components: { CoreBase },
     mixins: [commonCoreStrings],
     computed: {
+      coreBaseRoute() {
+        return [
+          ComponentMap.SIGN_IN,
+          ComponentMap.FACILITY_SELECT,
+          ComponentMap.AUTH_SELECT,
+        ].includes(this.$route.name);
+      },
       redirect: {
         get() {
           return this.$store.state.signIn.redirect;
