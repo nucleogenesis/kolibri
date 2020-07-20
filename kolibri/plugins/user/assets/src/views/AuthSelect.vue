@@ -4,6 +4,7 @@
     :immersivePage="false"
     :immersivePagePrimary="false"
     :fullScreen="true"
+    :showDemoBanner="true"
   >
     <AuthBase :hideCreateAccount="true">
       <div class="auth-select">
