@@ -1,6 +1,6 @@
 <template>
 
-  <AuthBase>
+  <AuthBase :busy="busy">
     <!--
         Unless we know the user needs to create a password enter this div
         block for the main flow - see the v-else below for the create password flow
@@ -163,7 +163,9 @@
           }"
         />{{ coreString('goBackAction') }}
       </KButton>
+
       <p>{{ $tr("needToMakeNewPasswordLabel", { user: username }) }}</p>
+
       <PasswordTextbox
         ref="createPassword"
         :autofocus="true"
@@ -228,6 +230,8 @@
     mixins: [responsiveWindowMixin, commonCoreStrings],
     data() {
       return {
+        username: '',
+        password: '',
         usernameSuggestions: [],
         usernamesForCurrentFacility: [],
         suggestionTerm: '',
@@ -247,22 +251,6 @@
       ...mapGetters(['selectedFacility', 'isAppContext']),
       ...mapState('signIn', ['hasMultipleFacilities']),
       ...mapState(['redirect']),
-      username: {
-        get() {
-          return this.$store.state.signIn.username;
-        },
-        set(username) {
-          this.$store.commit('signIn/SET_USERNAME', username);
-        },
-      },
-      password: {
-        get() {
-          return this.$store.state.signIn.password;
-        },
-        set(password) {
-          this.$store.commit('signIn/SET_PASSWORD', password);
-        },
-      },
       backToFacilitySelectionRoute() {
         const facilityRoute = this.$router.getRoute(ComponentMap.FACILITY_SELECT);
         const whereToNext = this.$router.getRoute(ComponentMap.SIGN_IN);
@@ -360,25 +348,6 @@
         }
       },
     },
-    // Clear the username when entering the route.
-    // username may be held over if you select a user from UsersList
-    // then change to a facility that doesn't use UsersList
-    //
-    // TODO: If we want to clear the username whenever we switch facilities,
-    // then we can remove the `beforeRouteEnter` and use the commented out
-    // `beforeRouteLeave` below
-    beforeRouteEnter(to, from, next) {
-      next(vm => vm.$store.commit('signIn/RESET_FORM_VALUES'));
-    },
-    // Clear the username before changing routes to FacilitySelect?
-    /*
-    beforeRouteLeave(to, from, next) {
-      if(to.name === ComponentMap.FACILITY_SELECT) {
-        this.$store.commit('signIn/RESET_FORM_VALUES')
-      }
-      next();
-    },
-    */
     created() {
       // Only fetch if we should fetch for this facility
       if (this.showUsersList) {
@@ -398,6 +367,8 @@
         // changed so far and clearing the errors, if any
         this.username = '';
         this.password = '';
+        this.createdPassword = '';
+        this.createdPasswordConfirmation = '';
         // This ensures we don't get '<field> required' when going back
         // and forth
         this.usernameBlurred = false;
