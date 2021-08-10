@@ -1322,6 +1322,7 @@ class Facility(Collection):
             default_facility = get_device_setting("default_facility")
         except DeviceNotProvisioned:
             # device has not been provisioned yet, so just return None in this case
+            logging.error("Cannot retrieve default facility; the device is not provisioned.")
             return None
         if not default_facility:
             # Legacy databases will not have this explicitly set.
