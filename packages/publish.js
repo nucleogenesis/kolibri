@@ -67,7 +67,7 @@ const currentCwd = process.cwd();
 process.chdir(path.resolve(__dirname, '..'));
 
 function publishCommand(workspace) {
-  execSync(`yarn workspace ${workspace} publish --new-version 0.14.7 --tag ${tag}`, {
+  execSync(`yarn workspace ${workspace} publish --new-version ${version} --tag ${tag}`, {
     stdio: 'inherit',
   });
 }

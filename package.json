@@ -50,7 +50,7 @@
   "private": true,
   "devDependencies": {
     "@types/jest": "^24.0.12",
-    "kolibri-tools": "0.14.7",
+    "kolibri-tools": "0.14.8-dev.1",
     "xhr-mock": "^2.5.1",
     "yarn-run-all": "^3.1.1"
   },

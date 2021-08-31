@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "eslint-plugin-import": "^2.20.0",
-    "kolibri-tools": "0.14.7",
+    "kolibri-tools": "0.14.8-dev.1",
     "responselike": "^1.0.2"
   }
 }
