@@ -29,8 +29,8 @@
     <ContentCardListViewItem
       v-for="content in contents"
       :key="content.id"
-      :channelThumbnail="setChannelThumbnail(content)"
-      :channelTitle="channelTitle(content)"
+      :channelThumbnail="content.channel_thumbnail"
+      :channelTitle="content.channel_thumbnail"
       :description="content.description"
       activityLength="shortActivity"
       class="grid-item"
@@ -47,6 +47,7 @@
       :footerIcons="footerIcons"
       :createdDate="content.bookmark ? content.bookmark.created : null"
       @openCopiesModal="openCopiesModal"
+      @removeFromBookmarks="removeFromBookmarks(content, contents)"
     />
     <CopiesModal
       v-if="modalIsOpen"
@@ -61,7 +62,6 @@
 
 <script>
 
-  import { mapState } from 'vuex';
   import { validateLinkObject } from 'kolibri.utils.validators';
   import responsiveWindowMixin from 'kolibri.coreVue.mixins.responsiveWindowMixin';
   // import ContentCard from './ContentCard';
@@ -101,11 +101,6 @@
         default: () => ({}),
         required: false,
       },
-      channelThumbnail: {
-        type: String,
-        required: false,
-        default: null,
-      },
       footerIcons: {
         type: Object,
         required: false,
@@ -117,26 +112,14 @@
       sharedContentId: null,
       uniqueId: null,
     }),
-    computed: {
-      ...mapState('topicsRoot', { channels: 'rootNodes' }),
-    },
     methods: {
       openCopiesModal(contentId) {
         this.sharedContentId = contentId;
         this.uniqueId = this.contents.find(content => content.content_id === contentId).id;
         this.modalIsOpen = true;
       },
-      setChannelThumbnail(content) {
-        if (this.channelThumbnail) {
-          return this.channelThumbnail;
-        } else {
-          let match = this.channels.find(channel => channel.id === content.channel_id);
-          return match ? match.thumbnail : null;
-        }
-      },
-      channelTitle(content) {
-        let match = this.channels.find(channel => channel.id === content.channel_id);
-        return match ? match.title : null;
+      removeFromBookmarks(content, contents) {
+        return this.$emit('removeFromBookmarks', content.bookmark, contents.indexOf(content));
       },
     },
   };
