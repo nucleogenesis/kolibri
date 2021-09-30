@@ -21,6 +21,7 @@
       <ContentCardGroupGrid
         :genContentLink="genContentLink"
         :contents="contents"
+        cardViewStyle="card"
       />
 
       <KButton

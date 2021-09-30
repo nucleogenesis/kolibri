@@ -43,7 +43,7 @@
             />
           </div>
           <h2>{{ $tr('recent') }}</h2>
-          <ContentCardGroupGrid
+          <HybridLearningCardGrid
             v-if="popular.length"
             :cardViewStyle="currentViewStyle"
             :genContentLink="genContentLink"
@@ -84,7 +84,7 @@
   import { PageNames } from '../constants';
   import commonLearnStrings from './commonLearnStrings';
   import ChannelCardGroupGrid from './ChannelCardGroupGrid';
-  import ContentCardGroupGrid from './ContentCardGroupGrid';
+  import HybridLearningCardGrid from './HybridLearningCardGrid';
   import EmbeddedSidePanel from './EmbeddedSidePanel';
   import CategorySearchModal from './CategorySearchModal';
 
@@ -99,7 +99,7 @@
       };
     },
     components: {
-      ContentCardGroupGrid,
+      HybridLearningCardGrid,
       ChannelCardGroupGrid,
       EmbeddedSidePanel,
       CategorySearchModal,
