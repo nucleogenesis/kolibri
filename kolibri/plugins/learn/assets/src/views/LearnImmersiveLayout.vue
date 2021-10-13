@@ -12,7 +12,7 @@
       :resourceTitle="resourceTitle"
       :learningActivities="mappedLearningActivities"
       :isLessonContext="false"
-      :isBookmarked="bookmark ? true : bookmark"
+      :isBookmarked="Boolean(bookmark)"
       :isCoachContent="isCoachContent"
       :contentProgress="contentProgress"
       :allowMarkComplete="allowMarkComplete"
@@ -72,6 +72,7 @@
   import GlobalSnackbar from '../../../../../../kolibri/core/assets/src/views/GlobalSnackbar';
   import SkipNavigationLink from '../../../../../../kolibri/core/assets/src/views/SkipNavigationLink';
   import AppError from '../../../../../../kolibri/core/assets/src/views/AppError';
+  import { normalizeContentNode } from '../modules/coreLearn/utils';
   import ContentPage from './ContentPage';
   import LearningActivityBar from './LearningActivityBar';
 
@@ -178,10 +179,12 @@
     created() {
       client({
         method: 'get',
-        url: urls['kolibri:core:bookmarks-list'](),
-        params: { contentnode_id: this.content.id },
+        url: urls['kolibri:core:contentnodeBookmarksList'](),
       }).then(response => {
-        this.bookmark = response.data[0] || false;
+        console.log(response.data);
+        console.log(this.content.id);
+        this.bookmark =
+          response.data.find(bm => bm.contentnode_id === this.content.id).bookmark || null;
       });
     },
     methods: {
@@ -195,9 +198,9 @@
             method: 'delete',
             url: urls['kolibri:core:bookmarks_detail'](this.bookmark.id),
           }).then(() => {
-            this.bookmark = false;
+            this.bookmark = null;
           });
-        } else if (this.bookmark === false) {
+        } else if (this.bookmark === null) {
           client({
             method: 'post',
             url: urls['kolibri:core:bookmarks-list'](),
@@ -206,7 +209,7 @@
               user: this.currentUserId,
             },
           }).then(response => {
-            this.bookmark = response.data;
+            this.bookmark = normalizeContentNode(response.data);
           });
         }
       },

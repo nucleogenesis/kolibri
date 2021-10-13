@@ -227,7 +227,6 @@
               ? this.coreString('removeFromBookmarks')
               : this.coreString('saveToBookmarks'),
             event: 'toggleBookmark',
-            disabled: this.isBookmarked === null,
             dataTest: this.isBookmarked ? 'removeBookmarkButton' : 'addBookmarkButton',
           },
         ];
