@@ -54,8 +54,8 @@ module.exports = ({ mode = 'development', hot = false } = {}) => {
           },
         },
         {
-          test: /\.js$/,
-          loader: 'babel-loader',
+          test: /\.m?js$/,
+          loader: 'swc-loader',
           exclude: { and: [/(node_modules\/vue|dist|core-js)/, { not: [/\.(esm\.js|mjs)$/] }] },
         },
         {

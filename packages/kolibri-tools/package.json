@@ -96,7 +96,9 @@
     "npm": ">= 8"
   },
   "devDependencies": {
+    "@swc/core": "^1.2.160",
     "recast": "^0.20.4",
-    "rewire": "^2.5.2"
+    "rewire": "^2.5.2",
+    "swc-loader": "^0.1.15"
   }
 }
