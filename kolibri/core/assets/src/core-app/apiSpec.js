@@ -63,6 +63,7 @@ import redirectBrowser from '../utils/redirectBrowser';
 import * as licenseTranslations from '../utils/licenseTranslations';
 import bytesForHumans from '../utils/bytesForHumans';
 import UserType from '../utils/UserType';
+import * as syncTaskUtils from '../utils/syncTaskUtils';
 import samePageCheckGenerator from '../utils/samePageCheckGenerator';
 import AppBar from '../views/AppBar';
 import ImmersiveToolbar from '../views/ImmersiveToolbar';
@@ -245,6 +246,7 @@ export default {
     serverClock,
     shuffled,
     sortLanguages,
+    syncTaskUtils,
     UserType,
     validators,
     coreStrings,
