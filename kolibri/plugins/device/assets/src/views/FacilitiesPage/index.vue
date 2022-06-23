@@ -161,9 +161,9 @@
     ConfirmationRegisterModal,
     SyncFacilityModalGroup,
   } from 'kolibri.coreVue.componentSets.sync';
+  import { TaskStatuses, TaskTypes } from 'kolibri.utils.syncTaskUtils';
   import TasksBar from '../ManageContentPage/TasksBar';
   import HeaderWithOptions from '../HeaderWithOptions';
-  import { TaskStatuses, TaskTypes } from '../../constants';
   import RemoveFacilityModal from './RemoveFacilityModal';
   import SyncAllFacilitiesModal from './SyncAllFacilitiesModal';
   import ImportFacilityModalGroup from './ImportFacilityModalGroup';

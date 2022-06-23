@@ -82,6 +82,7 @@
   import get from 'lodash/get';
   import last from 'lodash/last';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
+  import { TransferTypes } from 'kolibri.utils.syncTaskUtils';
   import useContentTasks from '../../../composables/useContentTasks';
   import ChannelContentsSummary from '../../SelectContentPage/ChannelContentsSummary';
   import ContentTreeViewer from '../../SelectContentPage/ContentTreeViewer';
@@ -92,7 +93,7 @@
   import SelectTransferSourceModal from '../SelectTransferSourceModal';
   import taskNotificationMixin from '../../taskNotificationMixin';
   import TaskProgress from '../TaskProgress';
-  import { ContentSources, PageNames, TransferTypes } from '../../../constants';
+  import { ContentSources, PageNames } from '../../../constants';
 
   import { fetchPageData, fetchNodeWithAncestors, startExportTask, startDeleteTask } from './api';
 

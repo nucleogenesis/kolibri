@@ -74,9 +74,10 @@
   import { mapState, mapGetters, mapActions } from 'vuex';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
   import { TaskResource } from 'kolibri.resources';
+  import { TaskStatuses, TaskTypes } from 'kolibri.utils.syncTaskUtils';
   import taskNotificationMixin from '../taskNotificationMixin';
   import useContentTasks from '../../composables/useContentTasks';
-  import { PageNames, TaskStatuses, TaskTypes } from '../../constants';
+  import { PageNames } from '../../constants';
   import HeaderWithOptions from '../HeaderWithOptions';
   import SelectTransferSourceModal from './SelectTransferSourceModal';
   import ChannelPanel from './ChannelPanel/WithSizeAndOptions';

@@ -81,9 +81,10 @@
   import responsiveWindowMixin from 'kolibri.coreVue.mixins.responsiveWindowMixin';
   import { TaskResource } from 'kolibri.resources';
   import { crossComponentTranslator } from 'kolibri.utils.i18n';
+  import { TaskTypes, PageNames } from 'kolibri.utils.syncTaskUtils';
+  import { ContentWizardErrors } from '../../constants';
   import TaskProgress from '../ManageContentPage/TaskProgress';
   import useContentTasks from '../../composables/useContentTasks';
-  import { ContentWizardErrors, TaskTypes, PageNames } from '../../constants';
   import SelectionBottomBar from '../ManageContentPage/SelectionBottomBar';
   import taskNotificationMixin from '../taskNotificationMixin';
   import { updateTreeViewTopic } from '../../modules/wizard/handlers';
