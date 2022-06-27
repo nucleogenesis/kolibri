@@ -37,6 +37,7 @@ module.exports = ({ mode = 'development', hot = false, cache = false } = {}) => 
   return {
     target: 'browserslist',
     mode,
+    watch: mode !== 'production',
     cache: cache && {
       type: 'filesystem',
       version: '1.0.0',
