@@ -1,19 +1,11 @@
 <template>
 
-  <div>
-    <ProgressToolbar
-      :removeNavIcon="removeNavIcon"
-      :title="currentTitle"
-      @click_back="previousStep"
-    />
-    <div class="main">
-      <KPageContainer>
-        <component
-          :is="currentComponent"
-        />
-      </KPageContainer>
-    </div>
+  <component
+    :is="currentComponent"
+    :device.sync="device"
+  />
 
+  <!--
     <BottomAppBar v-if="service.state.matches('selectUsers')">
       <KButton
         primary
@@ -22,7 +14,7 @@
         @click="redirectToChannels"
       />
     </BottomAppBar>
-  </div>
+    -->
 
 </template>
 
@@ -53,6 +45,11 @@
         state: lodImportMachine.initialState,
         total_steps: 4,
         stateID: null,
+        device: {
+          name: '',
+          id: '',
+          baseurl: '',
+        },
       };
     },
     provide() {
@@ -94,26 +91,6 @@
         next();
       }
     },
-
-    beforeMount() {
-      this.fetchNetworkLocationFacilities(this.$route.query.device_id)
-        .then(data => {
-          if (data.facilities.length === 1)
-            this.service.send({
-              type: 'CONTINUE',
-              value: { device: data, facility: data.facilities[0] },
-            });
-          else if (data.facilities.length > 1)
-            this.service.send({ type: 'DEVICE_DATA', value: data });
-          else if (data.facilities.length === 0)
-            //unprovisioned server, can't sync from it
-            this.wizardService.send({ type: 'BACK' });
-        })
-        .catch(error => {
-          // TODO handle disconnected peers error more gracefully
-          this.$store.dispatch('showError', error);
-        });
-    },
     created() {
       this.service.start();
       this.service.onTransition(state => {
@@ -146,10 +123,4 @@
 </script>
 
 
-<style lang="scss" scoped>
-
-  .main {
-    margin: 16px;
-  }
-
-</style>
+<style lang="scss" scoped></style>

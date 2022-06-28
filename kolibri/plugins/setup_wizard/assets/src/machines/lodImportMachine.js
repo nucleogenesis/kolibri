@@ -1,6 +1,7 @@
 import { createMachine, assign } from 'xstate';
 import { TaskResource } from 'kolibri.resources';
-import SelectFacilityForm from '../views/importLODUsers/SelectFacilityForm.vue';
+import SelectFacilityForm from '../views/importLODUsers/SelectFacilityForm';
+import SelectLODSetupType from '../views/importLODUsers/SelectLODSetupType';
 import ImportIndividualUserForm from '../views/importLODUsers/ImportIndividualUserForm.vue';
 import LoadingTaskPage from '../views/importLODUsers/LoadingTaskPage';
 import MultipleUsers from '../views/importLODUsers/MultipleUsers';
@@ -83,11 +84,18 @@ export const lodImportMachine = createMachine({
     task: null,
   },
   states: {
+    selectSetupType: {
+      meta: { step: '0', component: SelectLODSetupType },
+      on: {
+        CONTINUE: { target: 'selectFacility' },
+        DEVICE_DATA: { actions: assignDevice },
+      },
+    },
     selectFacility: {
       meta: { step: '1', component: SelectFacilityForm },
       on: {
         CONTINUE: { target: 'userCredentials', actions: assignFacility },
-        DEVICE_DATA: { actions: assignDevice },
+        DEVICE_DATA: { actions: assignDevice }, // only place this exists TODO REMOVE IT
       },
     },
     userCredentials: {
