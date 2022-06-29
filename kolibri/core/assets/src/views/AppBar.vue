@@ -37,12 +37,20 @@
       </template>
 
       <template #actions>
-        <div>
+        <div aria-live="polite">
           <slot name="app-bar-actions"></slot>
-          <div class="total-points">
-            <slot name="totalPointsMenuItem"></slot>
+          <KIconButton icon="pointsActive" @click="pointsDisplayed = !pointsDisplayed" />
+          <div
+            v-if="pointsDisplayed"
+            class="points-popover"
+            :style="{
+              color: $themeTokens.text,
+              padding: '8px',
+            }"
+          >
+            {{ $tr('pointsMessage', { points: totalPoints }) }}
           </div>
-          <span v-if="isUserLoggedIn" class="username" tabindex="-1">
+          <span v-if="isUserLoggedIn" tabindex="-1">
             <KIcon
               icon="person"
               :style="{
@@ -53,7 +61,9 @@
                 top: '8px',
               }"
             />
-            {{ usernameForDisplay }}
+            <span class="username">
+              {{ usernameForDisplay }}
+            </span>
           </span>
 
         </div>
@@ -101,6 +111,7 @@
     },
     data() {
       return {
+        pointsDisplayed: false,
         userSyncStatus: null,
         isPolling: false,
         // poll every 10 seconds
@@ -109,7 +120,7 @@
       };
     },
     computed: {
-      ...mapGetters(['isUserLoggedIn']),
+      ...mapGetters(['isUserLoggedIn', 'totalPoints']),
       ...mapState({
         username: state => state.core.session.username,
         fullName: state => state.core.session.full_name,
@@ -158,6 +169,10 @@
         context:
           "This message is providing additional context to the screen-reader users, but is not visible in the Kolibri UI.\n\nIn this case the screen-reader will announce the message when user navigates to the 'hamburger' button with the keyboard, to indicate that it allows them to open the sidebar navigation menu.",
       },
+      pointsMessage: {
+        message: 'You earned { points, number } points',
+        context: 'Notification indicating how many points a leaner has earned.',
+      },
     },
   };
 
@@ -174,6 +189,8 @@
   }
 
   .username {
+    position: relative;
+    bottom: 3px;
     max-width: 200px;
     // overflow-x hidden seems to affect overflow-y also, so include a fixed height
     height: 16px;
@@ -239,6 +256,11 @@
     align-items: center;
   }
 
+  /deep/ .ui-toolbar__right {
+    display: flex;
+    align-items: center;
+  }
+
   .brand-logo {
     max-width: 48px;
     max-height: 48px;
@@ -249,6 +271,17 @@
   // Hide the UiButton focus ring
   /deep/ .ui-button__focus-ring {
     display: none;
+  }
+
+  .points-popover {
+    @extend %dropshadow-4dp;
+
+    position: absolute;
+    right: 50px;
+    z-index: 24;
+    font-size: 12px;
+    background-color: white;
+    border-radius: 8px;
   }
 
 </style>
