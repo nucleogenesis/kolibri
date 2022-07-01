@@ -1,6 +1,6 @@
 <template>
 
-  <Navbar>
+  <Navbar ref="navigation">
     <NavbarLink
       v-if="isUserLoggedIn"
       :title="coreString('homeLabel')"

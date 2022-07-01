@@ -39,17 +39,19 @@
       <template #actions>
         <div aria-live="polite">
           <slot name="app-bar-actions"></slot>
-          <KIconButton icon="pointsActive" @click="pointsDisplayed = !pointsDisplayed" />
-          <div
-            v-if="pointsDisplayed"
-            class="points-popover"
-            :style="{
-              color: $themeTokens.text,
-              padding: '8px',
-            }"
-          >
-            {{ $tr('pointsMessage', { points: totalPoints }) }}
-          </div>
+          <span v-if="isLearner">
+            <KIconButton icon="pointsActive" @click="pointsDisplayed = !pointsDisplayed" />
+            <div
+              v-if="pointsDisplayed"
+              class="points-popover"
+              :style="{
+                color: $themeTokens.text,
+                padding: '8px',
+              }"
+            >
+              {{ $tr('pointsMessage', { points: totalPoints }) }}
+            </div>
+          </span>
           <span v-if="isUserLoggedIn" tabindex="-1">
             <KIcon
               icon="person"
@@ -112,6 +114,8 @@
     data() {
       return {
         pointsDisplayed: false,
+        width: window.innerWidth,
+        appBarItems: [],
         userSyncStatus: null,
         isPolling: false,
         // poll every 10 seconds
@@ -120,7 +124,7 @@
       };
     },
     computed: {
-      ...mapGetters(['isUserLoggedIn', 'totalPoints']),
+      ...mapGetters(['isUserLoggedIn', 'totalPoints', 'isLearner']),
       ...mapState({
         username: state => state.core.session.username,
         fullName: state => state.core.session.full_name,
@@ -133,9 +137,14 @@
     },
     created() {
       window.addEventListener('click', this.handleWindowClick);
+      window.addEventListener('resize', this.onResize);
+    },
+    mounted() {
+      this.updateAppBarItems();
     },
     beforeDestroy() {
       window.removeEventListener('click', this.handleWindowClick);
+      window.removeEventListener('resize', this.onResize);
       this.isPolling = false;
     },
     methods: {
@@ -161,6 +170,33 @@
         } else {
           this.pollingInterval = 10000;
         }
+      },
+      onResize() {
+        this.width = window.innerWidth;
+        this.updateAppBarItems();
+      },
+      updateAppBarItems() {
+        console.log('updating');
+        const navItems = document.getElementsByClassName('list-item-navigation');
+        // console.log(navItems);
+        let index = 0;
+        let spaceTakenUp = 0;
+        this.appBarItems = [];
+        if (navItems && navItems.length > 0) {
+          while (index < navItems.length) {
+            spaceTakenUp = spaceTakenUp + navItems.item(index).offsetWidth;
+            if (spaceTakenUp < this.width - 40) {
+              this.appBarItems.push(navItems[index]);
+              index = index + 1;
+              console.log(index, navItems.length);
+              console.log(this.appBarItems);
+            } else {
+              return this.appBarItems;
+            }
+          }
+          return this.appBarItems;
+        }
+        return null;
       },
     },
     $trs: {
