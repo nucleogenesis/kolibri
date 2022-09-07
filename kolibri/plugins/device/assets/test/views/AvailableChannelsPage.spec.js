@@ -4,14 +4,18 @@ import { makeAvailableChannelsPageStore } from '../utils/makeStore';
 import router from './testRouter';
 
 jest.mock('kolibri.urls');
+jest.mock('kolibri.client');
 
 function makeWrapper(options = {}) {
   const { store, props = {} } = options;
   const defaultProps = {};
+  const node = document.createElement('div');
+  document.body.appendChild(node);
   return mount(AvailableChannelsPage, {
     propsData: { ...defaultProps, ...props },
     store: store || makeAvailableChannelsPageStore(),
     ...router,
+    attachTo: node,
   });
 }
 
