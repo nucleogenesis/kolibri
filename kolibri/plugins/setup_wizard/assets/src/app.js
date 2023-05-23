@@ -30,12 +30,23 @@ class SetupWizardModule extends KolibriApp {
     TaskResource.clearAll('facility_task');
     this.startRootVue();
 
-    // this is getting hit, but don't currently have a way to convey
-    // the necessary information
-    router.afterEach((to, from) => {
-      console.log('routeAFTEREACH')
-      console.log('TO, FROM', to, from);
-      // want to SEND 'PUSH HISTORY' event but do not have access to the wizard
+    router.beforeResolve((to, from, next) => {
+      console.log('beforeResolve', to, from);
+      if(from.meta.noBackAction) {
+        // TODO Figure out how to ensure we also account for FORWARD here
+        console.log("Has noBackAction, so we bail out");
+        next(false);
+      }
+      if(from.meta.wizardRouted) {
+        console.log("was wizardRouted, so we're just moving along...")
+        next();
+      }
+      // If we're here, we're dealing with a browser-based action,
+      // so let's short-circuit it here and just send the event to the wizard,
+      // which ought to then trigger the SetupWizardIndex's
+      console.log("sending event to wizardService", to.meta.eventOnGoBack);
+      from.meta.wizardService.send(to.meta.eventOnGoBack);
+      return next(false);
     });
   }
 }

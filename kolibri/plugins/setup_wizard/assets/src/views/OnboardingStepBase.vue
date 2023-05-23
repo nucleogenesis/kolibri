@@ -226,6 +226,14 @@
         }
       },
     },
+    beforeRouteUpdate(to, _, next) {
+      // Update `to` route to include this pages metadata
+      if(to.meta) {
+        to.meta.noBackAction = this.noBackAction;
+        to.meta.eventOnGoBack = this.eventOnGoBack;
+      }
+      next(to);
+    },
     // // not getting hit during wizard navigation or browser navigation
     // beforeRouteUpdate(to, from, next) {
     //   console.log('HIT to, from', to, from);
@@ -234,18 +242,33 @@
     //   }
     // },
     mounted() {
+      Object.assign(this.$route.meta, this.routeMeta());
       // is hit on browser back clicks, but provides v limited information: state keys
       // (HOWEVER, state keys are consistent - e.g. key for 'lodjoinfacility'
       // will remain same upon navigating away/navigating back, so could potentially
       // still track this way, but may not allow for the nuance needed when there are
       // multiple paths to/from different components
       window.addEventListener("popstate", (event) => {
-        console.log(
-          `location: ${document.location}, state: ${JSON.stringify(event.state)}`
-        );
+        console.log("THIS at onpopstate", this.$route);
+        if(this.$route.meta) {
+          console.log(
+            `location: ${document.location}, state: ${JSON.stringify(event.state)}`
+          );
+          this.$route.meta.browserEvent = true;
+        }
       });
     },
     methods: {
+      routeMeta() {
+        return {
+          ...(this.$route.meta || {}),
+          ...{
+            noBackAction: this.noBackAction,
+            eventOnGoBack: this.eventOnGoBack,
+            wizardService: this.wizardService,
+          },
+        };
+      },
       startOver() {
         this.wizardService.send('START_OVER');
         this.$store.dispatch('clearError');

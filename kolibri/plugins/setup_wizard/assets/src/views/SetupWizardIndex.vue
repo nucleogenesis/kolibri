@@ -66,6 +66,7 @@
     //   this.service.send({ type: 'PUSH_HISTORY', value: to });
     // },
     created() {
+
       /*
        * The interpreted wizardMachine is an object that lets you move between states.
        * It's current state value has no side effects or dependencies - so we can store it
@@ -86,6 +87,13 @@
       // desired behavior:
       // if the app is moved backwards in navigation,
       const synchronizeRouteAndMachine = state => {
+        console.log('synchronizeRouteAndMachine', state);
+        let wizardRouted = true;
+
+        window.addEventListener('popstate', () => {
+          wizardRouted = false;
+        });
+
         if (!state) return;
 
         const { meta } = state;
@@ -101,6 +109,7 @@
         // can this be retrieved from history?
 
         const route = meta[Object.keys(meta)[0]].route;
+
         if (route) {
           // Avoid redundant navigation
           if (this.$route.name !== route.name) {
@@ -129,6 +138,9 @@
             // if (this.$route?.meta?.backActionAllowed) {
 
             // }
+
+            route.meta = this.$route.meta;
+            route.meta.wizardRouted = wizardRouted;
             this.$router.push(route);
           } // // else if savedState doesn't match step of wizard (from assessing savedstate expectations for that route)
           // // remove everything in savedState beyond
