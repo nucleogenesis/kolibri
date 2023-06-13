@@ -33,7 +33,7 @@
         @clearall="handleClickClearAll"
       />
 
-      <CoreTable>
+      <CoreTable :dataLoading="loadingFacilities">
         <template #headers>
           <th>{{ coreString('facilityLabel') }}</th>
         </template>
@@ -245,6 +245,7 @@
         facilityForRegister: null,
         kdpProject: null, // { name, token }
         taskIdsToWatch: [],
+        loadingFacilities: true, // We're fetching in beforeMount so should make it true
       };
     },
     computed: {
@@ -280,7 +281,9 @@
       },
     },
     beforeMount() {
-      this.fetchFacilites();
+      this.fetchFacilites()
+        .then(() => (this.loadingFacilities = false))
+        .catch(() => (this.loadingFacilities = false));
     },
     methods: {
       facilityOptions() {

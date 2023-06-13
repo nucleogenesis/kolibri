@@ -5,7 +5,8 @@
     <template #subNav>
       <DeviceTopNav />
     </template>
-    <KPageContainer class="device-container">
+
+    <KPageContainer v-if="!isPageLoading" class="device-container">
       <UiAlert
         v-if="showDisabledAlert && alertDismissed"
         type="warning"
@@ -458,7 +459,7 @@
       };
     },
     computed: {
-      ...mapGetters(['isAppContext']),
+      ...mapGetters(['isAppContext', 'isPageLoading']),
       ...mapGetters('deviceInfo', ['getDeviceOS', 'canRestart', 'isRemoteContent']),
       pageTitle() {
         return this.deviceString('deviceManagementTitle');
@@ -564,46 +565,48 @@
       this.setFreeSpace();
     },
     beforeMount() {
-      this.getDeviceSettings().then(settings => {
-        const {
-          languageId = null,
-          landingPage = '',
-          allowGuestAccess = false,
-          allowLearnerUnassignedResourceAccess = false,
-          allowPeerUnlistedChannelImport = null,
-          allowOtherBrowsersToConnect = null,
-          primaryStorageLocation = null,
-          secondaryStorageLocations = [],
-          extraSettings = {},
-        } = settings;
-        const match = find(this.languageOptions, { value: languageId });
-        if (match) {
-          this.language = { ...match };
-        } else {
-          this.language = this.browserDefaultOption;
-        }
+      this.getDeviceSettings()
+        .then(settings => {
+          const {
+            languageId = null,
+            landingPage = '',
+            allowGuestAccess = false,
+            allowLearnerUnassignedResourceAccess = false,
+            allowPeerUnlistedChannelImport = null,
+            allowOtherBrowsersToConnect = null,
+            primaryStorageLocation = null,
+            secondaryStorageLocations = [],
+            extraSettings = {},
+          } = settings;
+          const match = find(this.languageOptions, { value: languageId });
+          if (match) {
+            this.language = { ...match };
+          } else {
+            this.language = this.browserDefaultOption;
+          }
 
-        if (settings.landingPage === LandingPageChoices.SIGN_IN) {
-          this.setSignInPageOption(settings);
-        }
+          if (settings.landingPage === LandingPageChoices.SIGN_IN) {
+            this.setSignInPageOption(settings);
+          }
 
-        this.setExtraSettings(extraSettings);
+          this.setExtraSettings(extraSettings);
 
-        Object.assign(this, {
-          landingPage,
-          allowGuestAccess,
-          allowLearnerUnassignedResourceAccess,
-          allowPeerUnlistedChannelImport,
-          allowOtherBrowsersToConnect,
-          primaryStorageLocation,
-          secondaryStorageLocations,
-          extraSettings,
-        });
-        this.storageLocations = getPathsPermissions([
-          ...this.secondaryStorageLocations,
-          this.primaryStorageLocation,
-        ]);
-      });
+          Object.assign(this, {
+            landingPage,
+            allowGuestAccess,
+            allowLearnerUnassignedResourceAccess,
+            allowPeerUnlistedChannelImport,
+            allowOtherBrowsersToConnect,
+            primaryStorageLocation,
+            secondaryStorageLocations,
+            extraSettings,
+          });
+          this.storageLocations = getPathsPermissions([
+            ...this.secondaryStorageLocations,
+            this.primaryStorageLocation,
+          ]);
+        })
+        .then(() => this.$store.dispatch('notLoading'));
     },
     methods: {
       setSignInPageOption(settings) {
