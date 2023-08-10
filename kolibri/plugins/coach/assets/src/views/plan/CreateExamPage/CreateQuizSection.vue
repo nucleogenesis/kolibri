@@ -15,12 +15,13 @@
             :layout4="{ span : 3}"
             :layout8="{ span: 7 }"
             :layout12="{ span: 11 }">
+
               <KTextbox
                 ref="title"
-                v-model.trim="examTitle"
                 :label="coachString('titleLabel')"
                 :autofocus="true"
                 :maxlength="100"
+                class="text-box-style"
               />
           </KGridItem>
         </KGrid>
@@ -30,7 +31,7 @@
         <hr id="bottom-border"/>
         <br>
 
-        <KGrid style="margin:0;padding:0">
+        <KGrid>
             <KGridItem 
             :layout12="{ span: 8 }"
             >
@@ -53,7 +54,14 @@
 
         <hr id="bottom-border"/>
         
-        <div class="no-question-layout">
+        
+        <AccordionContainer
+          v-if="isQuestionAvailable"
+        />
+
+        <div 
+          v-else
+          class="no-question-layout">
             <div class="question-mark-layout">
             <span id="help-icon-style">?</span>
             </div>
@@ -76,9 +84,18 @@
 <script>
 import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
 import commonCoach from '../../common';
+import AccordionContainer from './AccordionContainer.vue';
 export default {
   name:"CreateQuizSection",
+  components:{
+    AccordionContainer
+  },
   mixins: [commonCoreStrings, commonCoach],
+  data(){
+    return {
+      isQuestionAvailable:false,
+    }
+  },
   $trs: {
     sectionLabel:{
       message:"section 1",
@@ -160,5 +177,10 @@ export default {
   .add-section-button{
     float: right;
     background-color:#F5F5F5;
+  }
+
+  .text-box-style{
+    padding:15px;
+    width:1000px;
   }
 </style>
