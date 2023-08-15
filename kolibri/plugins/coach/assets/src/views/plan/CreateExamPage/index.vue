@@ -18,10 +18,10 @@
     </UiAlert>
 
     <KPageContainer>
-       
-      <CreateQuizSection/>
+   
+      <CreateQuizSection />
 
-      
+  
       <div v-if="bookmarksRoute">
         <strong>
           <KRouterLink
@@ -100,7 +100,7 @@
           @moreresults="handleMoreResults"
         />
       </div>
-      
+  
 
       <BottomAppBar v-if="inSearchMode">
         <KRouterLink
@@ -122,9 +122,8 @@
       </BottomAppBar>
 
     </KPageContainer>
-   
+
   </CoachImmersivePage>
-  
 
 </template>
 
@@ -180,7 +179,7 @@
         bookmarksCount: 0,
         bookmarks: [],
         more: null,
-        showSectionSettingsMenu:false
+        showSectionSettingsMenu: false,
       };
     },
     computed: {
@@ -581,9 +580,9 @@
           this.numQuestions = this.maxQs;
         }
       },
-      addSection(){
-        this.showSectionSettingsMenu=true;
-      }
+      addSection() {
+        this.showSectionSettingsMenu = true;
+      },
     },
     $trs: {
       resources: {
@@ -638,7 +637,6 @@
         context:
           "Indicates the number of resources selected by the coach. For example: '3 of 5 resources selected'.\n\nOnly translate 'of' and 'resource/resources selected'",
       },
-      
     },
   };
 
