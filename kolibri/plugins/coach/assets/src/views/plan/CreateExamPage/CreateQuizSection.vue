@@ -154,13 +154,20 @@
 <style lang="scss"  scoped>
 
   .style-icon {
-    width: 40px;
-    height: 40px;
-    margin: 20px;
+    width: 32px;
+    height: 32px;
+    margin-top: 8px;
+    margin-left: 16px;
   }
 
   /deep/ .ui-textbox-label {
-    width: 1220px;
+    width: 100% !important;
+  }
+
+  /deep/ .textbox {
+    width: 100% !important;
+    max-width: 100%;
+    margin-left: -1em;
   }
 
   .no-question-layout {
