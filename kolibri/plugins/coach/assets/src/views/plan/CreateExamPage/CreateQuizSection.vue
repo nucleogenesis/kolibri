@@ -1,9 +1,7 @@
 <template>
 
-  <div>
-    <KGrid
-      class="add-padding"
-    >
+  <div class="add-padding">
+    <KGrid>
       <KGridItem
         :layout4="{ span: 1 }"
         :layout8="{ span: 1 }"
@@ -30,7 +28,9 @@
       </KGridItem>
     </KGrid>
 
-    <p>{{ $tr('addSectionsDescription') }}</p>
+    <p style="margin-top: 0px;">
+      {{ $tr('addSectionsDescription') }}
+    </p>
 
     <hr class="bottom-border">
     <br>
@@ -207,7 +207,7 @@
   }
 
   .add-padding {
-    padding-top: 15px;
+    padding-top: 16px;
   }
 
   .no-question-style {
