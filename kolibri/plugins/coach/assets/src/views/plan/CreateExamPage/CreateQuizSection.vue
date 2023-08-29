@@ -43,12 +43,9 @@
         :style="noKgridItemPadding"
       >
         <KTabs
-          tabsId="coachReportsTabs"
-          ariaLabel="Coach reports"
+          tabsId="quizSectionTabs"
           :tabs="tabs"
-        >
-          <template></template>
-        </KTabs>
+        />
       </KGridItem>
 
       <KGridItem
@@ -58,6 +55,7 @@
         <KButton
           appearance="flat-button"
           icon="plus"
+          @click="() => quizForge.addSection()"
         >
           {{ ($tr('addSection')).toUpperCase() }}
         </KButton>
@@ -96,6 +94,7 @@
 
 <script>
 
+  import { get } from '@vueuse/core';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
   import commonCoach from '../../common';
 
@@ -103,11 +102,6 @@
     name: 'CreateQuizSection',
     mixins: [commonCoreStrings, commonCoach],
     inject: ['quizForge'],
-    data() {
-      return {
-        tabs: [{ id: '', label: this.$tr('sectionLabel') }],
-      };
-    },
     computed: {
       noKgridItemPadding() {
         return {
@@ -115,12 +109,16 @@
           paddingRight: '0px',
         };
       },
+      tabs() {
+        return get(this.quizForge.allSections).map((section, index) => {
+          const id = section.section_id;
+          const label = section.section_title ? section.section_title : `Section ${index + 1}`;
+
+          return { id, label };
+        });
+      },
     },
     $trs: {
-      sectionLabel: {
-        message: 'section 1',
-        context: 'Indicates the section number created',
-      },
       addSection: {
         message: 'add section',
         context: 'Label for adding the number of quiz sections',
