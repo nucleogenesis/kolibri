@@ -98,12 +98,12 @@
     </div>
   </div>
 
-
 </template>
 
 
 <script>
 
+  import { ref } from 'kolibri.lib.vueCompositionApi';
   import { enhancedQuizManagementStrings } from 'kolibri-common/strings/enhancedQuizManagementStrings';
   import every from 'lodash/every';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
@@ -135,6 +135,9 @@
     inject: ['quizForge'],
     mixins: [commonCoreStrings],
     setup() {
+      const channels = ref([]);
+      const visibleResources = ref([]);
+      const bookmarks = ref([]);
       const {
         sectionSettings$,
         selectFromBookmarks$,
@@ -143,13 +146,22 @@
         numberOfSelectedResources$,
         numberOfResources$,
       } = enhancedQuizManagementStrings;
+
       const {
-        bookmarks,
-        channelTopics,
-        channels,
-        ancestors,
-        fetchTopicResource,
+        fetchChannelsWithExercises,
+        fetchBookmarksWithExercises,
+        fetchTopicResources,
       } = useExerciseResources();
+
+      fetchChannelsWithExercises().then(c => {
+        channels.value = c;
+        visibleResources.value = c;
+      });
+
+      fetchBookmarksWithExercises().then(b => {
+        bookmarks.value = b;
+      });
+
       const { windowIsSmall } = useKResponsiveWindow();
 
       return {
@@ -160,30 +172,10 @@
         numberOfSelectedResources$,
         numberOfResources$,
         windowIsSmall,
+
         bookmarks,
         channels,
-        ancestors,
-        channelTopics,
-        fetchTopicResource,
-      };
-    },
-    data() {
-      return {
-        viewMoreButtonState: 'no_more_results',
-        // contentHasCheckbox: () => false,
-        // contentIsSelected: () => '',
-        searchTerm: '',
-        // search: '',
-        isExiting: false,
-        filters: {
-          channel: this.$route.query.channel || null,
-          kind: this.$route.query.kind || null,
-          role: this.$route.query.role || null,
-        },
-        visibleResources: [],
-        showChannels: true,
-        bookmarksCount: 0,
-        pageName: this.$route.name,
+        visibleResources,
       };
     },
     computed: {
@@ -225,10 +217,7 @@
         );
       },
       contentIsInLesson() {
-        return ({ id }) =>
-          Boolean(
-            this.channels
-          );
+        return ({ id }) => Boolean(this.channels);
       },
       selectionMetadata(/*content*/) {
         return function() {};
@@ -282,6 +271,7 @@
         this.showResourcesDifferenceMessage(newVal.length - oldVal.length);
         this.debouncedSaveResources();
       },
+      /*
       filters(newVal) {
         const newQuery = {
           ...this.$route.query,
@@ -292,7 +282,9 @@
           query: pickBy(newQuery),
         });
       },
+        */
     },
+    /*
     beforeRouteEnter(to, from, next) {
       if (to.params.topic_id) {
         next(vm => {
@@ -300,6 +292,7 @@
         });
       }
     },
+    */
 
     beforeRouteLeave(to, from, next) {
       // Block the UI and show a notification in case last save takes too long
@@ -341,6 +334,7 @@
         this.visibleResources = [];
       }
       this.bookmarksCount = this.bookmarks.length;
+      console.log(this.channels, this.bookmarks, this.visibleResources);
     },
     methods: {
       /** @public */
@@ -458,7 +452,6 @@
         return this.topicListingLink({ ...this.$route.params, topicId });
       },
     },
-
   };
 
 </script>
@@ -526,13 +519,13 @@
   }
 
   .bottom-navigation {
-    background-color: white;
-    color: black;
-    padding: 10px;
     position: fixed;
     bottom: 0;
     width: 50%;
+    padding: 10px;
+    color: black;
     text-align: center;
+    background-color: white;
   }
 
 </style>
