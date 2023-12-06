@@ -1,8 +1,8 @@
-import { ref, onMounted } from 'kolibri.lib.vueCompositionApi';
+import { ref } from 'kolibri.lib.vueCompositionApi';
 import { ChannelResource, ContentNodeResource, ContentNodeSearchResource } from 'kolibri.resources';
 import { ContentNodeKinds } from 'kolibri.coreVue.vuex.constants';
 import { getContentNodeThumbnail } from 'kolibri.utils.contentNode';
-import { set } from '@vueuse/core';
+//import { set } from '@vueuse/core';
 // import pickBy from 'lodash/pickBy';
 import uniq from 'lodash/uniq';
 //import { QuizResource } from '../composables/quizCreationSpecs';
@@ -79,7 +79,7 @@ export function useExerciseResources() {
   function fetchBookmarksWithExercises() {
     return ContentNodeResource.fetchBookmarks({ params: { limit: 25, available: true } }).then(
       data => {
-        return data.filter(bookmark => bookmark.kind === 'EXERCISE');
+        return data.results.filter(bookmark => bookmark.kind === 'EXERCISE');
       }
     );
   }
@@ -131,7 +131,6 @@ export function useExerciseResources() {
 
   /** @returns Promise<QuizResource[]> */
   function fetchTopicResources(topicId) {
-    console.log('topicId', topicId);
     const topicNodePromise = ContentNodeResource.fetchModel({ id: topicId });
     const childNodesPromise = ContentNodeResource.fetchCollection({
       getParams: {
@@ -148,8 +147,8 @@ export function useExerciseResources() {
         // set(topicId, topicNode.id);
         // ancestors.value = [...topicNode.ancestors, topicNode];
         return {
+          contentList,
           ...topicNode,
-          ...contentList,
           thumbnail: getContentNodeThumbnail(topicNode),
         };
       });
@@ -162,7 +161,7 @@ export function useExerciseResources() {
         const childTopics = childNodes.filter(({ kind }) => kind === ContentNodeKinds.TOPIC);
         const topicIds = childTopics.map(({ id }) => id);
         const topicsThatHaveExerciseDescendants = _getTopicsWithExerciseDescendants(topicIds);
-        topicsThatHaveExerciseDescendants.then(topics => {
+        return topicsThatHaveExerciseDescendants.then(topics => {
           const childNodesWithExerciseDescendants = childNodes
             .map(childNode => {
               const index = topics.findIndex(topic => topic.id === childNode.id);
@@ -180,11 +179,11 @@ export function useExerciseResources() {
               }
               return true;
             });
-          contentList.value = childNodesWithExerciseDescendants.map(node => ({
+          const contentList = childNodesWithExerciseDescendants.map(node => ({
             ...node,
             thumbnail: getContentNodeThumbnail(node),
           }));
-          channels.value = contentList.value;
+          console.log("contentList", contentList);
           resolve(contentList);
         });
       }

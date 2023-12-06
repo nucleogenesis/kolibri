@@ -38,33 +38,20 @@
         </KRouterLink>
       </div>
 
-      <KGrid>
-        <KGridItem :layout12="{ span: 12 }">
-          <LessonsSearchBox @searchterm="handleSearchTerm" />
-        </KGridItem>
-      </KGrid>
     </div>
-
-    <!-- <LessonsSearchFilters
-      v-if="inSearchMode"
-      v-model="filters"
-      class="search-filters"
-      :searchTerm="searchTerm"
-      :searchResults="searchResults"
-    /> -->
 
     <ResourceSelectionBreadcrumbs
       v-if="isTopicIdSet"
-      :ancestors="ancestors"
+      :ancestors="[]"
       :channelsLink="channelsLink"
       :topicsLink="topicsLink"
     />
 
     <ContentCardList
-      v-if="!isExiting"
-      :contentList="filteredContentList"
+      v-if="visibleResources && visibleResources.length"
+      :contentList="visibleResources"
       :showSelectAll="selectAllIsVisible"
-      :viewMoreButtonState="viewMoreButtonState"
+      :viewMoreButtonState="'disabled'"
       :selectAllChecked="addableContent.length === 0"
       :contentIsChecked="contentIsInLesson"
       :contentHasCheckbox="c => !contentIsDirectoryKind(c)"
@@ -72,7 +59,7 @@
       :contentCardLink="contentLink"
       @changeselectall="toggleTopicInWorkingResources"
       @change_content_card="toggleSelected"
-      @moreresults="handleMoreResults"
+      @moreresults="() => null"
     />
     <div class="bottom-navigation">
       <KGrid>
@@ -88,10 +75,11 @@
           :layout8="{ span: 4 }"
           :layout4="{ span: 2 }"
         >
+          <!-- FIXME Don't always make this disabled -->
           <KButton
             :text="coreString('continueAction')"
             :primary="true"
-            :disabled="disabled || formIsSubmitted"
+            :disabled="false"
           />
         </KGridItem>
       </KGrid>
@@ -103,7 +91,9 @@
 
 <script>
 
-  import { ref } from 'kolibri.lib.vueCompositionApi';
+  import router from 'kolibri.coreVue.router';
+  import { ref, onMounted } from 'kolibri.lib.vueCompositionApi';
+  import vue from 'vue-router';
   import { enhancedQuizManagementStrings } from 'kolibri-common/strings/enhancedQuizManagementStrings';
   import every from 'lodash/every';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
@@ -135,9 +125,11 @@
     inject: ['quizForge'],
     mixins: [commonCoreStrings],
     setup() {
+
       const channels = ref([]);
       const visibleResources = ref([]);
       const bookmarks = ref([]);
+
       const {
         sectionSettings$,
         selectFromBookmarks$,
@@ -153,13 +145,28 @@
         fetchTopicResources,
       } = useExerciseResources();
 
-      fetchChannelsWithExercises().then(c => {
-        channels.value = c;
-        visibleResources.value = c;
-      });
 
-      fetchBookmarksWithExercises().then(b => {
-        bookmarks.value = b;
+      onMounted(() => {
+        const currentRoute = router._vueRouter.currentRoute;
+        console.log(currentRoute);
+        if(currentRoute.params.topic_id) {
+          fetchTopicResources(currentRoute.params.topic_id).then(resource => {
+            console.log('fetchedTopicResources', resource);
+            visibleResources.value = resource.contentList;
+            //this.ancestors = resource.ancestors;
+          });
+        }
+
+        fetchChannelsWithExercises().then(c => {
+          channels.value = c;
+          if(!currentRoute.params.topic_id) {
+            visibleResources.value = c;
+          }
+        });
+
+        fetchBookmarksWithExercises().then(b => {
+          bookmarks.value = b;
+        });
       });
 
       const { windowIsSmall } = useKResponsiveWindow();
@@ -173,48 +180,18 @@
         numberOfResources$,
         windowIsSmall,
 
+        fetchTopicResources,
         bookmarks,
         channels,
         visibleResources,
       };
     },
     computed: {
-      filteredContentList() {
-        const { role } = this.filters;
-        if (!this.inSearchMode) {
-          return this.channels;
-        }
-
-        return this.channels.filter(contentNode => {
-          let passesFilters = true;
-          if (role === 'nonCoach') {
-            passesFilters = passesFilters && contentNode.num_coach_contents === 0;
-          }
-          if (role === 'coach') {
-            passesFilters = passesFilters && contentNode.num_coach_contents > 0;
-          }
-          return passesFilters;
-        });
-      },
-      inSearchMode() {
-        return this.pageName === PageNames.SELECT_FROM_RESOURCE;
-      },
       isTopicIdSet() {
         return this.$route.params.topic_id;
       },
-      // inputPlaceHolderStyle() {
-      //   return {
-      //     color: this.$themeTokens.annotation,
-      //   };
-      // },
       selectAllIsVisible() {
-        // Do not show 'Select All' if on Search Results, on Channels Page,
-        // or if all contents are topics
-        return (
-          !this.inSearchMode &&
-          this.pageName !== LessonsPageNames.SELECTION_ROOT &&
-          !every(this.quizForge.channels.value, this.contentIsDirectoryKind)
-        );
+        return !every(this.quizForge.channels.value, this.contentIsDirectoryKind)
       },
       contentIsInLesson() {
         return ({ id }) => Boolean(this.channels);
@@ -271,28 +248,16 @@
         this.showResourcesDifferenceMessage(newVal.length - oldVal.length);
         this.debouncedSaveResources();
       },
-      /*
-      filters(newVal) {
-        const newQuery = {
-          ...this.$route.query,
-          ...newVal,
-        };
-
-        this.$router.push({
-          query: pickBy(newQuery),
-        });
-      },
-        */
     },
-    /*
-    beforeRouteEnter(to, from, next) {
+
+    beforeRouteUpdate(to, from, next) {
+      console.log('beforeRouteUpdate', to, from);
       if (to.params.topic_id) {
         next(vm => {
           vm.updateResource();
         });
       }
     },
-    */
 
     beforeRouteLeave(to, from, next) {
       // Block the UI and show a notification in case last save takes too long
@@ -324,18 +289,6 @@
           });
       }
     },
-    created() {
-      this.bookmarksCount = this.getBookmarks();
-    },
-    mounted() {
-      if (this.quizForge.channels.value.length > 0) {
-        this.visibleResources = this.quizForge.channels.value;
-      } else {
-        this.visibleResources = [];
-      }
-      this.bookmarksCount = this.bookmarks.length;
-      console.log(this.channels, this.bookmarks, this.visibleResources);
-    },
     methods: {
       /** @public */
       focusFirstEl() {
@@ -354,18 +307,11 @@
       //   }
       //   return '';
       // },
-      getBookmarks() {
-        return this.bookmarks.length;
-      },
       lessonCardClicked() {
         this.showChannels = false;
       },
       contentLink(content) {
         if (!content.is_leaf) {
-          this.fetchTopicResource(this.$route.params.topic_id).then(resource => {
-            this.channels = resource.contentList;
-            // this.ancestors = resource.ancestors;
-          });
           return {
             name: PageNames.SELECT_FROM_RESOURCE,
             params: {
@@ -377,38 +323,6 @@
         }
 
         return {}; // or return {} if you prefer an empty object
-      },
-      handleSearchTerm(searchTerm) {
-        const query = {
-          last_id: this.$route.query.last_id || this.$route.params.topicId,
-        };
-        const lastPage = this.$route.query.last;
-        if (lastPage) {
-          query.last = lastPage;
-        }
-        this.$router.push({
-          name: LessonsPageNames.SELECTION_SEARCH,
-          params: {
-            searchTerm,
-          },
-          query,
-        });
-      },
-      handleMoreResults() {
-        this.moreResultsState = 'waiting';
-        this.fetchAdditionalSearchResults({
-          searchTerm: this.searchTerm,
-          kind: this.filters.kind,
-          channelId: this.filters.channel,
-          currentResults: this.searchResults.results,
-        })
-          .then(() => {
-            this.moreResultsState = null;
-            this.moreResultsState;
-          })
-          .catch(() => {
-            this.moreResultsState = 'error';
-          });
       },
       selectionRootLink() {
         return this.$router.getRoute(PageNames.SELECT_FROM_RESOURCE, {}, this.$route.query);
@@ -436,9 +350,10 @@
         return !is_leaf;
       },
       updateResource() {
-        this.fetchTopicResource(this.$route.params.topic_id).then(resource => {
-          this.channels = resource.contentList;
-          this.ancestors = resource.ancestors;
+        this.fetchTopicResources(this.$route.params.topic_id).then(resource => {
+          console.log('fetchedTopicResources', resource);
+          this.visibleResources.value = resource.contentList;
+          //this.ancestors = resource.ancestors;
         });
       },
       topicListingLink({ topicId }) {

@@ -124,6 +124,7 @@
     computed: {
       showButton() {
         return (
+          this.viewMoreButtonState !== 'disabled' &&
           this.viewMoreButtonState !== 'waiting' && this.viewMoreButtonState !== 'no_more_results'
         );
       },
