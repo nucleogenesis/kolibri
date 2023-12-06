@@ -179,11 +179,13 @@ export function useExerciseResources() {
               }
               return true;
             });
+          // TODO -- be sure that we get `exercises` prpoerty from the `topics` thing above
+          // that is the list of all exercises within a given topic -- useful for "selecting all"
+          // of the topic children when the checkbox is clicked on the topic
           const contentList = childNodesWithExerciseDescendants.map(node => ({
             ...node,
             thumbnail: getContentNodeThumbnail(node),
           }));
-          console.log("contentList", contentList);
           resolve(contentList);
         });
       }

@@ -193,9 +193,6 @@
       selectAllIsVisible() {
         return !every(this.quizForge.channels.value, this.contentIsDirectoryKind)
       },
-      contentIsInLesson() {
-        return ({ id }) => Boolean(this.channels);
-      },
       selectionMetadata(/*content*/) {
         return function() {};
         // let count = 0;
