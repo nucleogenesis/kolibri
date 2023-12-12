@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import isEqual from 'lodash/isEqual';
+import differenceBy from 'lodash/differenceBy';
 import { enhancedQuizManagementStrings } from 'kolibri-common/strings/enhancedQuizManagementStrings';
 import uniq from 'lodash/uniq';
 import { ContentNodeKinds } from 'kolibri.coreVue.vuex.constants';
@@ -15,7 +16,7 @@ import { get, set } from '@vueuse/core';
 import { computed, ref } from 'kolibri.lib.vueCompositionApi';
 // TODO: Probably move this to this file's local dir
 import selectQuestions from '../modules/examCreation/selectQuestions.js';
-import { Quiz, QuizSection, QuizQuestion } from './quizCreationSpecs.js';
+import { ExerciseResource, Quiz, QuizSection, QuizQuestion, QuizResource } from './quizCreationSpecs.js';
 
 /** Validators **/
 /* objectSpecs expects every property to be available -- but we don't want to have to make an
@@ -26,7 +27,7 @@ function validateQuiz(quiz) {
   return validateObject(quiz, Quiz);
 }
 
-/**
+/**:
  * @param {QuizResource} o - The resource to check
  * @returns {boolean} - True if the resource is a valid QuizResource
  */
@@ -37,7 +38,7 @@ function isExercise(o) {
 /**
  * Composable function presenting primary interface for Quiz Creation
  */
-export default (DEBUG = false) => {
+export default (DEBUG = true) => {
   // -----------
   // Local state
   // -----------
@@ -64,12 +65,13 @@ export default (DEBUG = false) => {
   //--
   // Debug Data Generators
   //--
-  function _quizQuestions(num = 5) {
+  function _quizQuestions(num = 5, exercise_id = "") {
     const questions = [];
     for (let i = 0; i <= num; i++) {
       const overrides = {
         title: `Quiz Question ${i}`,
         question_id: uuidv4(),
+        exercise_id,
       };
       questions.push(objectWithDefaults(overrides, QuizQuestion));
     }
@@ -79,14 +81,34 @@ export default (DEBUG = false) => {
   function _quizSections(num = 5, numQuestions = 5) {
     const sections = [];
     for (let i = 0; i <= num; i++) {
+      const resource_pool =_exerciseResources(i+1);
       const overrides = {
+        resource_pool,
         section_id: uuidv4(),
         section_title: `Test section ${i}`,
-        questions: _quizQuestions(numQuestions),
+        questions: resource_pool[0].questions.slice(0, numQuestions),
+        question_count: numQuestions,
       };
       sections.push(objectWithDefaults(overrides, QuizSection));
     }
     return sections;
+  }
+
+  function _exerciseResources(num = 1) {
+    const pool = [];
+    for (let i = 0; i <= num; i++) {
+      const exercise_id = uuidv4();
+      const overrides = {
+        id: exercise_id,
+        content_id: uuidv4(),
+        kind: ContentNodeKinds.EXERCISE,
+        is_leaf: true,
+        title: `Test Exercise ${i}`,
+        questions: _quizQuestions(20, exercise_id),
+      };
+      pool.push(objectWithDefaults(overrides, ExerciseResource));
+    }
+    return pool
   }
 
   function _generateTestData(numSections = 5, numQuestions = 5) {
@@ -253,7 +275,7 @@ export default (DEBUG = false) => {
   }
 
   /**
-   * @param  {Quiz} updates
+   * @param  {Partial<Quiz>} updates
    * @throws {TypeError} if updates is not a valid Quiz object
    * @affects _quiz
    * Validates the input type and then updates _quiz with the given updates */
@@ -268,7 +290,7 @@ export default (DEBUG = false) => {
   // Questions / Exercises management
   // --------------------------------
 
-  /** @param {QuizQuestion} question
+  /** @param {QuizQuestion} question_id
    * @affects _selectedQuestionIds - Adds question to _selectedQuestionIds if it isn't
    * there already */
   function addQuestionToSelection(question_id) {
@@ -276,7 +298,7 @@ export default (DEBUG = false) => {
   }
 
   /**
-   * @param {QuizQuestion} question
+   * @param {QuizQuestion} question_id
    * @affects _selectedQuestionIds - Removes question from _selectedQuestionIds if it is there */
   function removeQuestionFromSelection(question_id) {
     set(
@@ -336,49 +358,61 @@ export default (DEBUG = false) => {
       throw new Error(`Section with id ${section_id} not found.`);
     }
     return get(activeExercisePool).reduce((acc, exercise) => {
+      console.log(exercise);
       return [...acc, ...exercise.questions];
     }, []);
   }
 
+  // TODO Consider extracting the "section-specific" logic to its own module
+
   // Computed properties
-  /** @type {ComputedRef<Quiz>} The value of _quiz */
+  /** @type {ref<Quiz>} The value of _quiz */
   const quiz = computed(() => get(_quiz));
-  /** @type {ComputedRef<QuizSection[]>} The value of _quiz's `question_sources` */
+
+  /** @type {ref<QuizSection[]>} The value of _quiz's `question_sources` */
   const allSections = computed(() => get(quiz).question_sources);
-  /** @type {ComputedRef<QuizSection>} The active section */
+
+  /** @type {ref<QuizSection>} The active section */
   const activeSection = computed(() =>
     get(allSections).find(s => s.section_id === get(_activeSectionId))
   );
-  /** @type {ComputedRef<QuizSection[]>} The inactive sections */
+
+  /** @type {ref<QuizSection[]>} The inactive sections */
   const inactiveSections = computed(() =>
     get(allSections).filter(s => s.section_id !== get(_activeSectionId))
   );
-  /** @type {ComputedRef<QuizResource[]>}   The active section's `resource_pool` */
-  const activeResourcePool = computed(() => get(activeSection).resource_pool);
-  /** @type {ComputedRef<ExerciseResource[]>} The active section's `resource_pool` - that is,
-   *                                          Exercises from which we will enumerate all
-   *                                          available questions */
-  const activeExercisePool = computed(() => get(activeResourcePool).filter(isExercise));
-  /** @type {ComputedRef<QuizQuestion[]>} All questions in the active section's `resource_pool`
-   *                                      exercises */
+
+  /** @type {ref<ExerciseResource[]>}   The active section's `resource_pool` */
+  const activeExercisePool = computed(() => get(activeSection).resource_pool);
+
+  /** @type {ref<QuizQuestion[]>} All questions in the active section's `resource_pool` exercises */
   const activeQuestionsPool = computed(() => _getQuestionsFromSection(get(_activeSectionId)));
-  /** @type {ComputedRef<QuizQuestion[]>} All questions in the active section's `questions` property
+
+  /** @type {ref<QuizQuestion[]>} All questions in the active section's `questions` property
    *                                      those which are currently set to be used in the section */
   const activeQuestions = computed(() => get(activeSection).questions);
-  /** @type {ComputedRef<String[]>} All question_ids the user has selected for the active section */
+
+  /** @type {ref<String[]>} All question_ids the user has selected for the active section */
   const selectedActiveQuestions = computed(() => get(_selectedQuestionIds));
-  /** @type {ComputedRef<QuizQuestion[]>} Questions in the active section's `resource_pool` that
-   *                                         are not in `questions` */
-  const replacementQuestionPool = computed(() => {});
-  /** @type {ComputedRef<Array>} A list of all channels available which have exercises */
+
+  /** @type {ref<QuizQuestion[]>} Questions in the active section's `resource_pool` that
+   *                                         are not in the section's `questions` */
+  const replacementQuestionPool = computed(() => {
+    const activeQuestionIds = get(activeQuestions).map(q => q.question_id);
+    return get(activeQuestionsPool)
+      .filter(({ question_id }) => !activeQuestionIds.includes(question_id));
+  });
+
+  /** @type {ref<Array>} A list of all channels available which have exercises */
   const channels = computed(() => get(_channels));
-  /** @type {ComputedRef<Array>} A list of all bookmarks available which have exercises */
+
+  /** @type {ref<Array>} A list of all bookmarks available which have exercises */
   const bookmarks = computed(() => get(_bookmarks));
 
   /** Handling the Select All Checkbox
    * See: remove/toggleQuestionFromSelection() & selectAllQuestions() for more */
 
-  /** @type {ComputedRef<Boolean>} Whether all active questions are selected */
+  /** @type {ref<Boolean>} Whether all active questions are selected */
   const allQuestionsSelected = computed(() => {
     return isEqual(
       get(selectedActiveQuestions).sort(),
@@ -451,3 +485,79 @@ export default (DEBUG = false) => {
     bookmarks,
   };
 };
+
+
+/**
+ * # An overview of naming conventions and how things work
+ *
+ * ## This is "Quiz Creation" but is preemptively treated as "Quiz Editing"
+ *
+ * As it stands, a user may not edit a quiz -- but that is only due to historical considerations
+ * and is not likely to remain as such in the long term as this part of Kolibri continues to
+ * improve.
+ *
+ * One example may be that it would be convenient to duplicate a quiz or a section within it, along
+ * with the questions selected for it and the resources from which the coach has selected to choose
+ * those questions. This will not be affected by preeminent "quiz editing complications" --
+ * particularly the concern around editing a quiz already taken.
+ *
+ * This necessarily effects the way that we structure our data so that we can ensure a consistent
+ * UX across the feature.
+ *
+ * ## "Types" (as defined in quizCreationSpecs)
+ *
+ * ### Quiz
+ *
+ * This represents the entirety of the quiz. This is the item that will be serialized and sent to
+ * the API to save the user's work on the quiz. The "Exam" model has a versioned property called
+ * `question_sources` which previously listed the questions -- but now will hold `QuizSection`
+ * objects which themselves manage their own sets of quesitons.
+ *
+ * ### QuizSection
+ *
+ * A section is made up of the following bits of data:
+ *
+ * - Title
+ * - Description
+ * - Questions (the list of questions selected to be in the section)
+ * - Question Count (the number of questions for the section)
+ * - Resource pool (the resources that have been selected from which to select questions)
+ *
+ * ### ExerciseResource
+ *
+ * A section will have 0+ ExerciseResources in its Resource Pool. An ExerciseResource is basically
+ * a ContentNode of the kind `Exercise` -- which for our purposes means that it is not a topic and
+ * that it will have "questions" associated with it.
+ *
+ * Each ExerciseResource has a property "assessment_ids" which map to the "question_id" property
+ * of a `QuizQuestion`.
+ *
+ * We can then derive a list of all available QuizQuestions based on which ExerciseResources are
+ * in the section's Resource Pool.
+ *
+ * Furthermore, we can then derive a several other important things by exposing methods & computed
+ * properties:
+ *
+ * - QuestionsPool - All questions in the ExerciseResources in the Resource Pool
+ * - ReplacementsPool - QuestionsPool.filter(<the section's already selected questions>)
+ * - Are any of the QuestionPool descendants of any of the currently displayed topics? (or all)
+ *   -- used to set a topic's checkbox to indeterminate, checked, empty as the user goes back
+ *   through the resource selection interface
+ * - More?
+ *
+ */
+
+
+/**
+ * useQuizResourceSelection
+ *
+ * // State
+ * _activeSection : Ref<QuizSection>
+ * _topicId : Ref<string>
+ *
+ * // Public Methods
+ * setTopicId(topicId) -> void
+ *
+ * // Computed
+ *
+ */

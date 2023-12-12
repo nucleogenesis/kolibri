@@ -22,10 +22,10 @@ const {
   quiz,
   allSections,
   activeSection,
-  // activeExercisePool,
+  activeExercisePool,
   activeQuestions,
   selectedActiveQuestions,
-  // replacementQuestionPool,
+  replacementQuestionPool,
 } = useQuizCreation();
 
 const _channel = { root: 'channel_1', name: 'Channel 1', kind: 'channel', is_leaf: false };
@@ -206,12 +206,15 @@ describe('useQuizCreation', () => {
 
     describe('Question replacement', () => {
       beforeEach(() => {
-        initializeQuiz();
-        const questions = [1, 2, 3].map(i => objectWithDefaults({ question_id: i }, QuizQuestion));
-        const { section_id } = get(activeSection);
-        updateSection({ section_id, questions });
+        /**
+          * Initializing with true puts us in DEBUG mode
+          * See _generateTestData in useQuizCreation.js
+          * Creates 5 sections, each with several Exercises and questions from them
+        */
+        initializeQuiz(true);
       });
-      it('Can give a list of questions in the exercise pool but not in the selected questions', () => {});
+      it('Can give a list of questions in the exercise pool but not in the selected questions', () => {
+      });
     });
   });
 });
