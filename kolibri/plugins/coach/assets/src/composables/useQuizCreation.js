@@ -313,7 +313,9 @@ export default function useQuizCreation(DEBUG = false) {
    * use */
 
   function initializeQuiz(collection) {
-    set(_quiz, objectWithDefaults({ collection }, Quiz));
+    const assignments = [];
+    assignments.push(collection);
+    set(_quiz, objectWithDefaults({ collection, assignments }, Quiz));
     if (DEBUG) {
       _generateTestData();
     } else {
