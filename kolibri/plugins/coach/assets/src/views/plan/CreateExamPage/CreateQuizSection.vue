@@ -357,12 +357,12 @@
   import DragHandle from 'kolibri.coreVue.components.DragHandle';
   import DragSortWidget from 'kolibri.coreVue.components.DragSortWidget';
   import Draggable from 'kolibri.coreVue.components.Draggable';
+  import AccordionItem from 'kolibri-common/components/AccordionItem';
+  import AccordionContainer from 'kolibri-common/components/AccordionContainer';
   import { injectQuizCreation } from '../../../composables/useQuizCreation';
   import commonCoach from '../../common';
   import { PageNames } from '../../../constants';
   import TabsWithOverflow from './TabsWithOverflow';
-  import AccordionContainer from './AccordionContainer';
-  import AccordionItem from './AccordionItem';
 
   const logger = logging.getLogger(__filename);
 

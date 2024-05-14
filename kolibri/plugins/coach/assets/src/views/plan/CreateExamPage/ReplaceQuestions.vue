@@ -156,10 +156,10 @@
   import { getCurrentInstance, computed, ref } from 'kolibri.lib.vueCompositionApi';
   import { get } from '@vueuse/core';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
+  import AccordionItem from 'kolibri-common/components/AccordionItem';
+  import AccordionContainer from 'kolibri-common/components/AccordionContainer';
   import { injectQuizCreation } from '../../../composables/useQuizCreation';
   import { PageNames } from '../../../constants/index';
-  import AccordionItem from './AccordionItem';
-  import AccordionContainer from './AccordionContainer';
 
   export default {
     name: 'ReplaceQuestions',
