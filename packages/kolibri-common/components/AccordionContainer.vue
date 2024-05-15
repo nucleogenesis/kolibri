@@ -2,6 +2,7 @@
 
   <div class="accordion">
     <KGrid
+      v-if="!hideTopActions"
       :style="{
         backgroundColor: $themePalette.grey.v_100,
       }"
@@ -69,6 +70,10 @@
       };
     },
     props: {
+      hideTopActions: {
+        type: Boolean,
+        default: false,
+      },
       items: {
         type: Array,
         required: true,
