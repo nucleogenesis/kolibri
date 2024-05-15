@@ -114,10 +114,6 @@ export default function useQuizCreation() {
           },
           []
         );
-        if (removedResourceQuestionIds.length === 0) {
-          // If no resources were removed, we don't need to update the questions
-          return;
-        }
         const questionsToKeep = originalQuestions.filter(
           q => !removedResourceQuestionIds.includes(q.id)
         );
