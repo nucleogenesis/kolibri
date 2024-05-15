@@ -16,83 +16,86 @@
         >
           <div class="column-contents-wrapper">
 
-            <KPageContainer>
-              <div
-                v-for="(section,index) in exam.question_sources"
-                :key="index"
+            <KPageContainer style="padding:0;">
+              <AccordionContainer
+                :hideTopActions="true"
+                :items="exam.question_sources.map(s => ({ id: s.section_id }))"
               >
-                <div
-                  class="spacing-items"
-                  :style="{
-                    backgroundColor: $themePalette.grey.v_100,
-                  }"
-                >
-                  <Button
-                    v-if="section.section_title"
-                    class="remove-btn-style"
-                    @click="toggleDescription"
+                <template #default="{ toggleItemState, isItemExpanded }">
+                  <AccordionItem
+                    v-for="(section) in exam.question_sources"
+                    :id="section.section_id"
+                    :key="section.section_id"
+                    :title="section.section_title"
                   >
-                    <KGrid>
-                      <KGridItem
-                        :layout12="{ span: 8 }"
-                        :layout8="{ span: 6 }"
-                        :layout4="{ span: 3 }"
-                      >
-                        <span class="quiz-title">
-                          {{ section.section_title }}
-                        </span>
-                      </KGridItem>
-
-                      <KGridItem
-                        :layout12="{ span: 4 }"
-                        :layout8="{ span: 2 }"
-                        :layout4="{ span: 1 }"
-                      >
-                        <div style="text-align: right; cursor: pointer">
+                    <template #heading="{ title }">
+                      <h3 class="accordion-header">
+                        <KButton
+                          tabindex="0"
+                          appearance="basic-link"
+                          :style="accordionStyleOverrides"
+                          class="accordion-header-label"
+                          :aria-expanded="isItemExpanded(section.section_id)"
+                          :aria-controls="`section-question-panel-${section.section_id}`"
+                          @click="toggleItemState(section.section_id)"
+                        >
+                          <span>{{ title }}</span>
                           <KIcon
-                            :icon="isDescriptionVisible ? 'chevronUp' : 'chevronDown'"
-                            class="icon-size"
+                            class="chevron-icon"
+                            :icon="isItemExpanded(section.section_id) ?
+                              'chevronUp' : 'chevronRight'"
                           />
-                        </div>
-                      </KGridItem>
-                    </KGrid>
-                  </Button>
-                  <Button class="remove-btn-style">
-                    <p v-if="isDescriptionVisible" style="font-size: 14px; text-align:left">
-                      {{ section.description }}
-                    </p>
-                  </Button>
+                        </KButton>
+                      </h3>
+                    </template>
+
+                    <template #content>
+
+                      <div
+                        v-if="isItemExpanded(section.section_id)"
+                        class="spacing-items"
+                        :style="{
+                          backgroundColor: $themePalette.grey.v_100,
+                        }"
+                      >
+
+                        <p style="font-size: 14px; text-align:left">
+                          {{ section.description }}
+                        </p>
 
 
-                <!-- <p>{{ coreString('timeSpentLabel') }}</p>
-                <div :style="{ paddingBottom: '8px' }">
-                  <TimeDuration class="timer" :seconds="time_spent" />
-                </div>
-                <p v-if="content && content.duration">
-                  {{ learnString('suggestedTime') }}
-                </p>
-                <SuggestedTime
-                  v-if="content && content.duration"
-                  class="timer"
-                  :seconds="content.duration"
-                /> -->
-                </div>
+                        <!-- <p>{{ coreString('timeSpentLabel') }}</p>
+                      <div :style="{ paddingBottom: '8px' }">
+                        <TimeDuration class="timer" :seconds="time_spent" />
+                      </div>
+                      <p v-if="content && content.duration">
+                        {{ learnString('suggestedTime') }}
+                      </p>
+                      <SuggestedTime
+                        v-if="content && content.duration"
+                        class="timer"
+                        :seconds="content.duration"
+                      /> -->
 
-                <span
-                  class="divider"
-                  :style="{ borderTop: `solid 1px ${$themeTokens.fineLine}` }"
-                >
-                </span>
+                        <span
+                          class="divider"
+                          :style="{ borderTop: `solid 1px ${$themeTokens.fineLine}` }"
+                        >
+                        </span>
 
-                <AnswerHistory
-                  :pastattempts="pastattempts"
-                  :questions="section.questions"
-                  :questionNumber="questionNumber"
-                  :wrapperComponentRefs="$refs"
-                  @goToQuestion="goToQuestion"
-                />
+                        <AnswerHistory
+                          :pastattempts="pastattempts"
+                          :questions="section.questions"
+                          :questionNumber="questionNumber"
+                          :wrapperComponentRefs="$refs"
+                          @goToQuestion="goToQuestion"
+                        />
+                      </div>
+                    </template>
+                  </AccordionItem>
+                </template>
 
-              </div>
+              </AccordionContainer>
 
             </KPageContainer>
           </div>
@@ -247,11 +250,12 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
   import ImmersivePage from 'kolibri.coreVue.components.ImmersivePage';
+  import AccordionItem from 'kolibri-common/components/AccordionItem';
+  import AccordionContainer from 'kolibri-common/components/AccordionContainer';
   import ResourceSyncingUiAlert from '../ResourceSyncingUiAlert';
   import useProgressTracking from '../../composables/useProgressTracking';
   import { PageNames, ClassesPageNames } from '../../constants';
   import { LearnerClassroomResource } from '../../apiResources';
-
   import AnswerHistory from './AnswerHistory';
 
   export default {
@@ -262,6 +266,8 @@
       };
     },
     components: {
+      AccordionItem,
+      AccordionContainer,
       AnswerHistory,
       BottomAppBar,
       ImmersivePage,
@@ -293,7 +299,6 @@
     data() {
       return {
         submitModalOpen: false,
-        isDescriptionVisible: false,
         // Note this time is only used to calculate the time spent on a
         // question, it is not used to generate any timestamps.
         startTime: Date.now(),
@@ -304,6 +309,12 @@
         loading: state => state.core.loading,
       }),
       ...mapState('examViewer', ['exam', 'contentNodeMap', 'questions', 'questionNumber']),
+      accordionStyleOverrides() {
+        return {
+          color: this.$themeTokens.text + '!important',
+          textDecoration: 'none',
+        };
+      },
       gridStyle() {
         if (!this.windowIsSmall) {
           return {
@@ -514,9 +525,6 @@
         }
         this.submitModalOpen = !this.submitModalOpen;
       },
-      toggleDescription() {
-        this.isDescriptionVisible = !this.isDescriptionVisible;
-      },
       finishExam() {
         this.saveAnswer(true).then(() => {
           this.$router.push(this.backPageLink);
@@ -662,6 +670,34 @@
     padding: 0;
     background-color: transparent;
     border: 0;
+  }
+
+  .accordion-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 1em;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+
+  .accordion-header-label {
+    display: block;
+    width: calc(100% - 1em);
+  }
+
+  .chevron-icon {
+    position: absolute;
+    top: 50%;
+    right: 0.5em;
+    vertical-align: middle;
+    transform: translateY(-50%);
   }
 
 </style>
