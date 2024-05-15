@@ -115,7 +115,7 @@ export default function useQuizCreation() {
           []
         );
         const questionsToKeep = originalQuestions.filter(
-          q => !removedResourceQuestionIds.includes(q.id)
+          q => !removedResourceQuestionIds.includes(q.item)
         );
         const numReplacementsNeeded =
           (question_count || originalQuestionCount) - questionsToKeep.length;
