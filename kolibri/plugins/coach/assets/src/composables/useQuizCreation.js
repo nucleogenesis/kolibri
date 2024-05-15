@@ -291,7 +291,7 @@ export default function useQuizCreation() {
 
     // Here we update each section's `resource_pool` to only be the IDs of the resources
     const sectionsWithResourcePoolAsIDs = get(allSections).map(section => {
-      const resourcePoolAsIds = get(section).resource_pool.map(content => content.id);
+      const resourcePoolAsIds = section.resource_pool.map(content => content.id);
       section.resource_pool = resourcePoolAsIds;
       return section;
     });
