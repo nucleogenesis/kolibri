@@ -39,7 +39,12 @@
                           :aria-controls="`section-question-panel-${section.section_id}`"
                           @click="toggleItemState(section.section_id)"
                         >
-                          <span>{{ title }}</span>
+                          <KIcon
+                            class="dot"
+                            :icon="sectionQuestionsIcon(section.section_id)"
+                            :color="sectionQuestionsIconColor(section.section_id)"
+                          />
+                          <span style="margin-left: 1em;">{{ title }}</span>
                           <KIcon
                             class="chevron-icon"
                             :icon="isItemExpanded(section.section_id) ?
@@ -325,6 +330,16 @@
           return qs;
         }, {});
       },
+      sectionCompletionMap() {
+        const answeredAttemptItems = this.pastattempts.filter(a => a.answer).map(a => a.item);
+        return this.exam.question_sources.reduce((acc, { section_id, questions }) => {
+          acc[section_id] = questions
+            .filter(q => answeredAttemptItems.includes(q.item))
+            .map(q => q.item);
+
+          return acc;
+        }, {});
+      },
       accordionStyleOverrides() {
         return {
           color: this.$themeTokens.text + '!important',
@@ -468,6 +483,28 @@
         });
     },
     methods: {
+      sectionQuestionsIconColor(section_id) {
+        const answered = this.sectionCompletionMap[section_id];
+        const total = this.exam.question_sources.find(s => s.section_id === section_id).questions
+          .length;
+        if (answered.length === total) {
+          return this.$themeTokens.progress;
+        } else if (answered.length > 0) {
+          return this.$themeTokens.progress;
+        }
+        return this.$themeTokens.textDisabled;
+      },
+      sectionQuestionsIcon(section_id) {
+        const answered = this.sectionCompletionMap[section_id];
+        const total = this.exam.question_sources.find(s => s.section_id === section_id).questions
+          .length;
+        if (answered.length === total) {
+          return 'unpublishedResource';
+        } else if (answered.length > 0) {
+          return 'unpublishedChange';
+        }
+        return 'unpublishedChange';
+      },
       setAndSaveCurrentExamAttemptLog({ close, interaction } = {}) {
         // Clear the learner classroom cache here as its progress data is now
         // stale

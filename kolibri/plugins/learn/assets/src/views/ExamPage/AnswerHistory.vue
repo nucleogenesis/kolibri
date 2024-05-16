@@ -16,14 +16,14 @@
         >
           <KIcon
             v-if="question.missing"
-            class="dot"
+            class="published"
             icon="warning"
             :color="$themePalette.yellow.v_1100"
           />
           <KIcon
             v-else
             class="dot"
-            icon="notStarted"
+            :icon="isAnswered(question) ? 'unpublishedResource' : 'unpublishedChange'"
             :color="isAnswered(question) ? $themeTokens.progress : $themeTokens.textDisabled"
           />
           <div class="text">
