@@ -87,7 +87,9 @@
                           :pastattempts="pastattempts"
                           :questions="section.questions"
                           :questionNumber="questionNumber"
+                          :questionItem="attemptLogItemValue"
                           :wrapperComponentRefs="$refs"
+                          :questionItemsList="questionItemsList"
                           @goToQuestion="goToQuestion"
                         />
                       </div>
@@ -125,7 +127,8 @@
           </main>
         </KGridItem>
       </KGrid>
-      <BottomAppBar :dir="bottomBarLayoutDirection" :maxWidth="null">
+      <BottomAppBar :maxWidth="null">
+
         <component :is="windowIsSmall ? 'div' : 'KButtonGroup'">
           <KButton
             :disabled="questionNumber === 0"
@@ -134,7 +137,7 @@
             :appearanceOverrides="navigationButtonStyle"
             :class="{ 'left-align': windowIsSmall }"
             :aria-label="$tr('previousQuestion')"
-            @click="goToQuestion(questionNumber - 1)"
+            @click="goToPreviousQuestion"
           >
             <template #icon>
               <KIcon
@@ -151,7 +154,7 @@
             :dir="layoutDirReset"
             :aria-label="$tr('nextQuestion')"
             :appearanceOverrides="navigationButtonStyle"
-            @click="goToQuestion(questionNumber + 1)"
+            @click="goToNextQuestion"
           >
             <span v-if="displayNavigationButtonLabel">{{ $tr('nextQuestion') }}</span>
             <template #iconAfter>
@@ -191,7 +194,6 @@
             {{ $tr('unableToSubmit') }}
           </div>
         </div>
-
       </BottomAppBar>
     </div>
 
@@ -309,6 +311,20 @@
         loading: state => state.core.loading,
       }),
       ...mapState('examViewer', ['exam', 'contentNodeMap', 'questions', 'questionNumber']),
+      /**
+       * @returns {Array} List of all question "item" in the exam - item being a unique identifier
+       * for a question in the form of `exercise_id:question_id` **in order** that they appear in
+       * the exam across all sections.
+       */
+      questionItemsList() {
+        return this.questions.map(question => question.item);
+      },
+      questionItemsMap() {
+        return this.questions.reduce((qs, question) => {
+          qs[question.item] = question;
+          return qs;
+        }, {});
+      },
       accordionStyleOverrides() {
         return {
           color: this.$themeTokens.text + '!important',
@@ -360,7 +376,13 @@
         );
       },
       currentQuestion() {
-        return this.questions[this.questionNumber];
+        return this.questionItemsMap[
+          // We have the index of the question item, so we get the item using that, then we get
+          // the appropriate question from the questionItemsMap
+          // Overall, this can and should be refactored as there is a lot of unnecessary processing
+          // happening throughout this feature
+          this.questionItemsList[this.questionNumber]
+        ];
       },
       nodeId() {
         return this.currentQuestion ? this.currentQuestion.exercise_id : null;
@@ -374,7 +396,7 @@
       // We generate a special item value to save to the backend that encodes
       // both the itemId and the nodeId
       attemptLogItemValue() {
-        return `${this.nodeId}:${this.itemId}`;
+        return this.currentQuestion?.item || null;
       },
       questionsAnswered() {
         return Object.keys(
@@ -501,7 +523,40 @@
         }
         return Promise.resolve();
       },
-      goToQuestion(questionNumber) {
+      goToPreviousQuestion() {
+        if (this.questionNumber === 0) {
+          return;
+        }
+        const questionNumber = this.questionNumber - 1;
+        const promise = this.debouncedSetAndSaveCurrentExamAttemptLog.flush() || Promise.resolve();
+        promise.then(() => {
+          this.$router.push({
+            name: ClassesPageNames.EXAM_VIEWER,
+            params: {
+              examId: this.exam.id,
+              questionNumber,
+            },
+          });
+        });
+      },
+      goToNextQuestion() {
+        if (this.questionNumber >= this.questionItemsList.length) {
+          return;
+        }
+        const questionNumber = this.questionNumber + 1;
+        const promise = this.debouncedSetAndSaveCurrentExamAttemptLog.flush() || Promise.resolve();
+        promise.then(() => {
+          this.$router.push({
+            name: ClassesPageNames.EXAM_VIEWER,
+            params: {
+              examId: this.exam.id,
+              questionNumber,
+            },
+          });
+        });
+      },
+      goToQuestion(questionItem) {
+        const questionNumber = this.questionItemsList.indexOf(questionItem);
         const promise = this.debouncedSetAndSaveCurrentExamAttemptLog.flush() || Promise.resolve();
         promise.then(() => {
           this.$router.push({
@@ -676,7 +731,7 @@
     position: relative;
     display: flex;
     align-items: center;
-    padding: 1em;
+    padding: 0;
     margin: 0;
     font-size: 1rem;
     font-weight: 400;
@@ -690,6 +745,8 @@
   .accordion-header-label {
     display: block;
     width: calc(100% - 1em);
+    height: 100%;
+    padding: 1em;
   }
 
   .chevron-icon {

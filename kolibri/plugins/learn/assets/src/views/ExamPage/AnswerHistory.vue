@@ -4,15 +4,15 @@
     <ul class="history-list">
       <li
         v-for="(question, index) in questions"
-        :key="index"
-        :ref="`item-${index}`"
+        :key="itemRef(question.item)"
+        :ref="itemRef(question.item)"
         class="list-item"
       >
         <button
-          :class="buttonClass(index)"
-          :disabled="questionNumber === index"
+          :class="buttonClass(question.item)"
+          :disabled="question.item === questionItem"
           class="clickable"
-          @click="$emit('goToQuestion', index)"
+          @click="$emit('goToQuestion', question.item)"
         >
           <KIcon
             v-if="question.missing"
@@ -62,6 +62,10 @@
         type: Number,
         required: true,
       },
+      questionItem: {
+        type: String,
+        required: true,
+      },
       // hack to get access to the scrolling pane
       wrapperComponentRefs: {
         type: Object,
@@ -69,9 +73,9 @@
       },
     },
     watch: {
-      questionNumber(index) {
+      questionNumber() {
         // If possible, scroll it into view
-        const element = this.$refs[`item-${index}`][0];
+        const element = (this.$refs[this.itemRef(this.questionItem)] || [])[0];
         if (element && element.scrollIntoView && this.wrapperComponentRefs.questionListWrapper) {
           const container = this.wrapperComponentRefs.questionListWrapper.$el;
           if (isAboveContainer(element, container)) {
@@ -83,6 +87,9 @@
       },
     },
     methods: {
+      itemRef(item) {
+        return `answer-history-item-${item}`;
+      },
       questionText(num) {
         return this.$tr('question', { num });
       },
@@ -90,8 +97,8 @@
         const attempt = this.pastattempts.find(attempt => attempt.item === question.item);
         return attempt && attempt.answer;
       },
-      buttonClass(index) {
-        if (this.questionNumber === index) {
+      buttonClass(item) {
+        if (this.questionItem === item) {
           return this.$computedClass({ backgroundColor: this.$themePalette.grey.v_100 });
         }
         return this.$computedClass({
@@ -142,6 +149,7 @@
     display: block;
     width: 100%;
     text-align: left;
+    cursor: pointer;
     user-select: none;
     border: 0;
     border-radius: 4px;
