@@ -1,43 +1,106 @@
 <template>
 
-  <div :aria-label="$tr('jumpToQuestion')" role="navigation">
-    <ul class="history-list">
-      <li
-        v-for="(question, index) in questions"
-        :key="itemRef(question.item)"
-        :ref="itemRef(question.item)"
-        class="list-item"
-      >
-        <button
-          :class="buttonClass(question.item)"
-          :disabled="question.item === questionItem"
-          class="clickable"
-          @click="$emit('goToQuestion', question.item)"
+  <AccordionContainer
+    :hideTopActions="true"
+    :items="sections"
+    :style="{ backgroundColor: $themeTokens.surface }"
+  >
+    <AccordionItem
+      v-for="(section, index) in sections"
+      :id="`section-questions-${index}`"
+      :key="`section-questions-${index}`"
+      :title="section.section_title"
+      @focus="expand(index)"
+    >
+      <template #heading="{ title }">
+        <h3 class="accordion-header">
+          <KButton
+            tabindex="0"
+            appearance="basic-link"
+            :style="accordionStyleOverrides"
+            class="accordion-header-label"
+            :aria-expanded="isExpanded(index)"
+            :aria-controls="`section-question-panel-${index}`"
+            @click="toggle(index)"
+          >
+            <KIcon
+              class="dot"
+              :icon="sectionQuestionsIcon(index)"
+              :color="sectionQuestionsIconColor(index)"
+            />
+            <span>{{ title }}</span>
+            <KIcon
+              class="chevron-icon"
+              :icon="(isExpanded(index)) ?
+                'chevronUp' : 'chevronRight'"
+            />
+          </KButton>
+        </h3>
+      </template>
+
+      <template #content>
+
+        <div
+          v-if="isExpanded(index)"
+          class="spacing-items"
+          :style="{
+            backgroundColor: $themePalette.grey.v_100,
+          }"
         >
-          <KIcon
-            v-if="question.missing"
-            class="published"
-            icon="warning"
-            :color="$themePalette.yellow.v_1100"
-          />
-          <KIcon
-            v-else
-            class="dot"
-            :icon="isAnswered(question) ? 'unpublishedResource' : 'unpublishedChange'"
-            :color="isAnswered(question) ? $themeTokens.progress : $themeTokens.textDisabled"
-          />
-          <div class="text">
-            {{ questionText(index + 1) }}
+          <span
+            class="divider"
+            :style="{ borderTop: `solid 1px ${$themeTokens.fineLine}` }"
+          >
+          </span>
+
+          <div :aria-label="$tr('jumpToQuestion')" role="navigation">
+            <ul class="history-list">
+              <li
+                v-for="(question, qIndex) in section.questions"
+                :key="itemRef(question.item)"
+                :ref="itemRef(question.item)"
+                class="list-item"
+              >
+                <button
+                  :class="buttonClass(question.item)"
+                  :disabled="question.item === questionItem"
+                  class="clickable"
+                  @click="$emit('goToQuestion', question.item)"
+                >
+                  <KIcon
+                    v-if="question.missing"
+                    class="published"
+                    icon="warning"
+                    :color="$themePalette.yellow.v_1100"
+                  />
+                  <KIcon
+                    v-else
+                    class="dot"
+                    :icon="isAnswered(question) ? 'unpublishedResource' : 'unpublishedChange'"
+                    :color="
+                      isAnswered(question) ? $themeTokens.progress : $themeTokens.textDisabled"
+                  />
+                  <div class="text">
+                    {{ questionText(qIndex + 1) }}
+                  </div>
+                </button>
+              </li>
+            </ul>
           </div>
-        </button>
-      </li>
-    </ul>
-  </div>
+        </div>
+      </template>
+    </AccordionItem>
+  </AccordionContainer>
 
 </template>
 
 
 <script>
+
+  import AccordionItem from 'kolibri-common/components/AccordionItem';
+  import AccordionContainer from 'kolibri-common/components/AccordionContainer';
+  import useAccordion from 'kolibri-common/components/useAccordion';
+  import { toRefs } from '@vueuse/core';
 
   function isAboveContainer(element, container) {
     return element.offsetTop < container.scrollTop;
@@ -49,12 +112,28 @@
 
   export default {
     name: 'AnswerHistory',
+    components: { AccordionContainer, AccordionItem },
+    setup(props) {
+      const { sections } = toRefs(props);
+
+      const { expand, isExpanded, toggle } = useAccordion(sections);
+
+      return {
+        expand,
+        isExpanded,
+        toggle,
+      };
+    },
     props: {
-      pastattempts: {
+      currentQuestion: {
+        type: Object,
+        required: true,
+      },
+      sections: {
         type: Array,
         required: true,
       },
-      questions: {
+      pastattempts: {
         type: Array,
         required: true,
       },
@@ -72,8 +151,38 @@
         required: true,
       },
     },
+    computed: {
+      currentSection() {
+        return this.sections.find(section =>
+          section.questions.map(q => q.item).includes(this.questionItem)
+        );
+      },
+      sectionCompletionMap() {
+        const answeredAttemptItems = this.pastattempts.filter(a => a.answer).map(a => a.item);
+        return this.sections.reduce((acc, { questions }, index) => {
+          acc[index] = questions
+            .filter(q => answeredAttemptItems.includes(q.item))
+            .map(q => q.item);
+
+          return acc;
+        }, {});
+      },
+      accordionStyleOverrides() {
+        return {
+          color: this.$themeTokens.text + '!important',
+          textDecoration: 'none',
+        };
+      },
+    },
     watch: {
       questionNumber() {
+        // Expand the section that contains the current question if it's closed
+        if (this.currentSection.questions.map(q => q.item).includes(this.questionItem)) {
+          const index = this.sections.indexOf(this.currentSection);
+          if (!this.isExpanded(index)) {
+            this.expand(index);
+          }
+        }
         // If possible, scroll it into view
         const element = (this.$refs[this.itemRef(this.questionItem)] || [])[0];
         if (element && element.scrollIntoView && this.wrapperComponentRefs.questionListWrapper) {
@@ -86,7 +195,37 @@
         }
       },
     },
+    created() {
+      // This is done here because when I did it in setup() the linter said the prop was not
+      // being used... so I moved it here and it's happy now.
+      // Expand the section that contains the current question
+      this.expand(
+        this.sections.findIndex(section =>
+          section.questions.map(q => q.item).includes(this.currentQuestion.item)
+        )
+      );
+    },
     methods: {
+      sectionQuestionsIconColor(index) {
+        const answered = this.sectionCompletionMap[index].length;
+        const total = this.sections[index].questions.length;
+        if (answered === total) {
+          return this.$themeTokens.progress;
+        } else if (answered > 0) {
+          return this.$themeTokens.progress;
+        }
+        return this.$themeTokens.textDisabled;
+      },
+      sectionQuestionsIcon(index) {
+        const answered = this.sectionCompletionMap[index].length;
+        const total = this.sections[index].questions.length;
+        if (answered === total) {
+          return 'unpublishedResource';
+        } else if (answered > 0) {
+          return 'unpublishedChange';
+        }
+        return 'unpublishedChange';
+      },
       itemRef(item) {
         return `answer-history-item-${item}`;
       },
@@ -166,6 +305,39 @@
   .text {
     margin: 16px;
     margin-left: 48px;
+  }
+
+  .accordion-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+
+  .accordion-header-label {
+    display: block;
+    width: calc(100% - 1em);
+    height: 100%;
+    padding: 1em;
+
+    span {
+      margin-left: 2em;
+    }
+  }
+
+  .chevron-icon {
+    position: absolute;
+    top: 50%;
+    right: 0.5em;
+    vertical-align: middle;
+    transform: translateY(-50%);
   }
 
 </style>

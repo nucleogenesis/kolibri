@@ -24,18 +24,6 @@
         class="header-actions"
       >
         <div class="header-right-actions">
-          <KIconButton
-            icon="expandAll"
-            :tooltip="expandAll$()"
-            :disabled="expandedItemIds.length === items.length"
-            @click="expandAll"
-          />
-          <KIconButton
-            icon="collapseAll"
-            :tooltip="collapseAll$()"
-            :disabled="expandedItemIds.length === 0"
-            @click="collapseAll"
-          />
           <slot name="right-actions"></slot>
         </div>
       </KGridItem>
@@ -45,11 +33,7 @@
       name="list"
       class="wrapper"
     >
-      <slot
-        :toggleItemState="toggleItemState"
-        :isItemExpanded="isItemExpanded"
-        :closeAccordionPanel="closeAccordionPanel"
-      ></slot>
+      <slot></slot>
     </transition-group>
   </div>
 
@@ -58,58 +42,12 @@
 
 <script>
 
-  import { enhancedQuizManagementStrings } from 'kolibri-common/strings/enhancedQuizManagementStrings';
-
   export default {
     name: 'AccordionContainer',
-    setup() {
-      const { expandAll$, collapseAll$ } = enhancedQuizManagementStrings;
-      return {
-        expandAll$,
-        collapseAll$,
-      };
-    },
     props: {
       hideTopActions: {
         type: Boolean,
         default: false,
-      },
-      items: {
-        type: Array,
-        required: true,
-        function(value) {
-          return value.every(item => typeof item === 'object' && 'id' in item);
-        },
-      },
-    },
-    data() {
-      return {
-        expandedItemIds: [],
-      };
-    },
-    methods: {
-      expandAll() {
-        this.expandedItemIds = this.items.map(item => item.id);
-      },
-      collapseAll() {
-        this.expandedItemIds = [];
-      },
-      toggleItemState(id) {
-        const index = this.expandedItemIds.indexOf(id);
-        if (index === -1) {
-          this.expandedItemIds.push(id);
-        } else {
-          this.expandedItemIds.splice(index, 1);
-        }
-      },
-      isItemExpanded(id) {
-        return this.expandedItemIds.includes(id);
-      },
-      closeAccordionPanel(id) {
-        if (this.expandedItemIds.includes(id)) {
-          const index = this.expandedItemIds.indexOf(id);
-          this.expandedItemIds.splice(index, 1);
-        }
       },
     },
   };

@@ -17,98 +17,30 @@
           <div class="column-contents-wrapper">
 
             <KPageContainer style="padding:0;">
-              <AccordionContainer
-                :hideTopActions="true"
-                :items="exam.question_sources.map(s => ({ id: s.section_id }))"
-              >
-                <template #default="{ toggleItemState, isItemExpanded }">
-                  <AccordionItem
-                    v-for="(section) in exam.question_sources"
-                    :id="section.section_id"
-                    :key="section.section_id"
-                    :title="section.section_title"
-                  >
-                    <template #heading="{ title }">
-                      <h3 class="accordion-header">
-                        <KButton
-                          tabindex="0"
-                          appearance="basic-link"
-                          :style="accordionStyleOverrides"
-                          class="accordion-header-label"
-                          :aria-expanded="isItemExpanded(section.section_id)"
-                          :aria-controls="`section-question-panel-${section.section_id}`"
-                          @click="toggleItemState(section.section_id)"
-                        >
-                          <KIcon
-                            class="dot"
-                            :icon="sectionQuestionsIcon(section.section_id)"
-                            :color="sectionQuestionsIconColor(section.section_id)"
-                          />
-                          <span style="margin-left: 1em;">{{ title }}</span>
-                          <KIcon
-                            class="chevron-icon"
-                            :icon="isItemExpanded(section.section_id) ?
-                              'chevronUp' : 'chevronRight'"
-                          />
-                        </KButton>
-                      </h3>
-                    </template>
-
-                    <template #content>
-
-                      <div
-                        v-if="isItemExpanded(section.section_id)"
-                        class="spacing-items"
-                        :style="{
-                          backgroundColor: $themePalette.grey.v_100,
-                        }"
-                      >
-
-                        <p style="font-size: 14px; text-align:left">
-                          {{ section.description }}
-                        </p>
-
-
-                        <!-- <p>{{ coreString('timeSpentLabel') }}</p>
-                      <div :style="{ paddingBottom: '8px' }">
-                        <TimeDuration class="timer" :seconds="time_spent" />
-                      </div>
-                      <p v-if="content && content.duration">
-                        {{ learnString('suggestedTime') }}
-                      </p>
-                      <SuggestedTime
-                        v-if="content && content.duration"
-                        class="timer"
-                        :seconds="content.duration"
-                      /> -->
-
-                        <span
-                          class="divider"
-                          :style="{ borderTop: `solid 1px ${$themeTokens.fineLine}` }"
-                        >
-                        </span>
-
-                        <AnswerHistory
-                          :pastattempts="pastattempts"
-                          :questions="section.questions"
-                          :questionNumber="questionNumber"
-                          :questionItem="attemptLogItemValue"
-                          :wrapperComponentRefs="$refs"
-                          :questionItemsList="questionItemsList"
-                          @goToQuestion="goToQuestion"
-                        />
-                      </div>
-                    </template>
-                  </AccordionItem>
-                </template>
-
-              </AccordionContainer>
-
+              <AnswerHistory
+                :pastattempts="pastattempts"
+                :sections="sections"
+                :questionNumber="questionNumber"
+                :currentQuestion="currentQuestion"
+                :questionItem="attemptLogItemValue"
+                :wrapperComponentRefs="$refs"
+                :questionItemsList="questionItemsList"
+                @goToQuestion="goToQuestion"
+              />
             </KPageContainer>
+
           </div>
         </KGridItem>
         <KGridItem :layout12="{ span: 8 }" class="column-pane">
           <main :class="{ 'column-contents-wrapper': !windowIsSmall }">
+
+            <KPageContainer>
+              <div style="text-align: center;">
+                <h2> {{ currentSection.section_title }} </h2>
+                <p> {{ currentSection.description }} </p>
+              </div>
+            </KPageContainer>
+
             <KPageContainer>
 
               <h1 class="number-of-questions">
@@ -257,8 +189,6 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
   import ImmersivePage from 'kolibri.coreVue.components.ImmersivePage';
-  import AccordionItem from 'kolibri-common/components/AccordionItem';
-  import AccordionContainer from 'kolibri-common/components/AccordionContainer';
   import ResourceSyncingUiAlert from '../ResourceSyncingUiAlert';
   import useProgressTracking from '../../composables/useProgressTracking';
   import { PageNames, ClassesPageNames } from '../../constants';
@@ -273,8 +203,6 @@
       };
     },
     components: {
-      AccordionItem,
-      AccordionContainer,
       AnswerHistory,
       BottomAppBar,
       ImmersivePage,
@@ -316,6 +244,14 @@
         loading: state => state.core.loading,
       }),
       ...mapState('examViewer', ['exam', 'contentNodeMap', 'questions', 'questionNumber']),
+      currentSection() {
+        return this.sections.find(section =>
+          section.questions.map(q => q.item).includes(this.currentQuestion.item)
+        );
+      },
+      sections() {
+        return this.exam.question_sources;
+      },
       /**
        * @returns {Array} List of all question "item" in the exam - item being a unique identifier
        * for a question in the form of `exercise_id:question_id` **in order** that they appear in
@@ -329,22 +265,6 @@
           qs[question.item] = question;
           return qs;
         }, {});
-      },
-      sectionCompletionMap() {
-        const answeredAttemptItems = this.pastattempts.filter(a => a.answer).map(a => a.item);
-        return this.exam.question_sources.reduce((acc, { section_id, questions }) => {
-          acc[section_id] = questions
-            .filter(q => answeredAttemptItems.includes(q.item))
-            .map(q => q.item);
-
-          return acc;
-        }, {});
-      },
-      accordionStyleOverrides() {
-        return {
-          color: this.$themeTokens.text + '!important',
-          textDecoration: 'none',
-        };
       },
       gridStyle() {
         if (!this.windowIsSmall) {
@@ -483,28 +403,6 @@
         });
     },
     methods: {
-      sectionQuestionsIconColor(section_id) {
-        const answered = this.sectionCompletionMap[section_id];
-        const total = this.exam.question_sources.find(s => s.section_id === section_id).questions
-          .length;
-        if (answered.length === total) {
-          return this.$themeTokens.progress;
-        } else if (answered.length > 0) {
-          return this.$themeTokens.progress;
-        }
-        return this.$themeTokens.textDisabled;
-      },
-      sectionQuestionsIcon(section_id) {
-        const answered = this.sectionCompletionMap[section_id];
-        const total = this.exam.question_sources.find(s => s.section_id === section_id).questions
-          .length;
-        if (answered.length === total) {
-          return 'unpublishedResource';
-        } else if (answered.length > 0) {
-          return 'unpublishedChange';
-        }
-        return 'unpublishedChange';
-      },
       setAndSaveCurrentExamAttemptLog({ close, interaction } = {}) {
         // Clear the learner classroom cache here as its progress data is now
         // stale
@@ -762,36 +660,6 @@
     padding: 0;
     background-color: transparent;
     border: 0;
-  }
-
-  .accordion-header {
-    position: relative;
-    display: flex;
-    align-items: center;
-    padding: 0;
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    text-align: left;
-    cursor: pointer;
-    user-select: none;
-    transition: background-color 0.3s ease;
-  }
-
-  .accordion-header-label {
-    display: block;
-    width: calc(100% - 1em);
-    height: 100%;
-    padding: 1em;
-  }
-
-  .chevron-icon {
-    position: absolute;
-    top: 50%;
-    right: 0.5em;
-    vertical-align: middle;
-    transform: translateY(-50%);
   }
 
 </style>

@@ -79,6 +79,7 @@
         :attemptLogs="attemptLogs"
         :selectedQuestionNumber="questionNumber"
         :isSurvey="isSurvey"
+        :sections="exam.question_sources"
         @select="navigateToQuestion"
       />
     </template>
@@ -93,6 +94,7 @@
           :attemptLogs="attemptLogs"
           :selectedQuestionNumber="questionNumber"
           :isSurvey="isSurvey"
+          :sections="exam.question_sources"
           @select="navigateToQuestion"
         />
         <div
@@ -154,6 +156,7 @@
 
 <script>
 
+  import { mapState } from 'vuex';
   import sortBy from 'lodash/sortBy';
   import isFinite from 'lodash/isFinite';
   import isNumber from 'lodash/isNumber';
@@ -315,6 +318,7 @@
       };
     },
     computed: {
+      ...mapState('examReportViewer', ['exam']),
       attemptLogs() {
         if (this.isQuiz || this.isSurvey) {
           return this.quizAttempts();

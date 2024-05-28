@@ -33,41 +33,86 @@
       </template>
     </KSelect>
 
-    <ul
+    <AccordionContainer
       v-else
-      ref="attemptList"
-      class="history-list"
-      role="listbox"
-      @keydown.home="setSelectedAttemptLog(0)"
-      @keydown.end="setSelectedAttemptLog(attemptLogs.length - 1)"
-      @keydown.up.prevent="setSelectedAttemptLog(previousQuestion(selectedQuestionNumber))"
-      @keydown.left.prevent="setSelectedAttemptLog(previousQuestion(selectedQuestionNumber))"
-      @keydown.down.prevent="setSelectedAttemptLog(nextQuestion(selectedQuestionNumber))"
-      @keydown.right.prevent="setSelectedAttemptLog(nextQuestion(selectedQuestionNumber))"
+      :hideTopActions="true"
+      :items="sections"
+      :style="{ backgroundColor: $themeTokens.surface }"
     >
-      <template v-for="(attemptLog, index) in attemptLogs">
-        <li
-          :key="index"
-          class="attempt-item"
-          :style="{
-            backgroundColor: isSelected(index) ? $themePalette.grey.v_100 : '',
-          }"
-        >
-          <a
-            ref="attemptListOption"
-            role="option"
-            class="attempt-item-anchor"
-            :aria-selected="isSelected(index).toString()"
-            :tabindex="isSelected(index) ? 0 : -1"
-            @click.prevent="setSelectedAttemptLog(index)"
-            @keydown.enter="setSelectedAttemptLog(index)"
-            @keydown.space.prevent="setSelectedAttemptLog(index)"
+      <AccordionItem
+        v-for="(section, index) in sections"
+        :id="`section-questions-${index}`"
+        :key="`section-questions-${index}`"
+        :title="section.section_title"
+        @focus="expand(index)"
+      >
+        <template #heading="{ title }">
+          <h3 class="accordion-header">
+            <KButton
+              tabindex="0"
+              appearance="basic-link"
+              :style="accordionStyleOverrides"
+              class="accordion-header-label"
+              :aria-expanded="isExpanded(index)"
+              :aria-controls="`section-question-panel-${index}`"
+              :text="title"
+              @click="toggle(index)"
+            />
+          </h3>
+        </template>
+        <template #content>
+          <div
+            v-show="isExpanded(index)"
+            :style="{
+              backgroundColor: $themePalette.grey.v_100,
+            }"
           >
-            <AttemptLogItem :isSurvey="isSurvey" :attemptLog="attemptLog" displayTag="p" />
-          </a>
-        </li>
-      </template>
-    </ul>
+            <ul
+              ref="attemptList"
+              class="history-list"
+              role="listbox"
+              @keydown.home="setSelectedAttemptLog(0)"
+              @keydown.end="
+                setSelectedAttemptLog(attemptLogs.length - 1)"
+              @keydown.up.prevent="
+                setSelectedAttemptLog(previousQuestion(selectedQuestionNumber))"
+              @keydown.left.prevent="
+                setSelectedAttemptLog(previousQuestion(selectedQuestionNumber))"
+              @keydown.down.prevent="
+                setSelectedAttemptLog(nextQuestion(selectedQuestionNumber))"
+              @keydown.right.prevent="
+                setSelectedAttemptLog(nextQuestion(selectedQuestionNumber))"
+            >
+              <li
+                v-for="(question, qIndex) in section.questions"
+                :key="`attempt-item-${qIndex}`"
+                class="attempt-item"
+                :style="{
+                  backgroundColor: isSelected(qIndex) ? $themePalette.grey.v_100 : '',
+                }"
+              >
+                <a
+                  ref="attemptListOption"
+                  role="option"
+                  class="attempt-item-anchor"
+                  :aria-selected="isSelected(qIndex).toString()"
+                  :tabindex="isSelected(qIndex) ? 0 : -1"
+                  @click.prevent="setSelectedAttemptLog(qIndex)"
+                  @keydown.enter="setSelectedAttemptLog(qIndex)"
+                  @keydown.space.prevent="setSelectedAttemptLog(qIndex)"
+                >
+                  <AttemptLogItem
+                    :isSurvey="isSurvey"
+                    :attemptLog="attemptLogs[qIndex]"
+                    displayTag="p"
+                  />
+                </a>
+              </li>
+            </ul>
+          </div>
+        </template>
+      </AccordionItem>
+    </AccordionContainer>
   </div>
 
 </template>
@@ -75,16 +120,61 @@
 
 <script>
 
+  import useAccordion from 'kolibri-common/components/useAccordion';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
+  import AccordionItem from 'kolibri-common/components/AccordionItem';
+  import AccordionContainer from 'kolibri-common/components/AccordionContainer';
+  import { watch } from 'kolibri.lib.vueCompositionApi';
+  import { toRefs } from '@vueuse/core';
   import AttemptLogItem from './AttemptLogItem';
 
   export default {
     name: 'AttemptLogList',
     components: {
       AttemptLogItem,
+      AccordionContainer,
+      AccordionItem,
     },
     mixins: [commonCoreStrings],
+    setup(props) {
+      const { isSurvey, sections, selectedQuestionNumber } = toRefs(props);
+      // No need to do this unless "practice quiz" begins to use the same sections structure
+      // This means expand, isExpanded, and toggle cannot be referenced in any template code
+      // which only shows when isSurvey is true
+      if (isSurvey.value) {
+        return {};
+      }
+
+      const { expand, isExpanded, toggle } = useAccordion(sections);
+
+      /** Finds the section which the current attempt belongs to and expands it */
+      function expandCurrentSectionIfNeeded() {
+        let qCount = 0;
+        for (let i = 0; i < sections.value.length; i++) {
+          qCount += sections.value[i].questions.length;
+          if (qCount >= selectedQuestionNumber.value) {
+            if (!isExpanded(i)) {
+              expand(i);
+            }
+            break;
+          }
+        }
+      }
+
+      watch(selectedQuestionNumber, expandCurrentSectionIfNeeded);
+      expandCurrentSectionIfNeeded();
+
+      return {
+        expand,
+        isExpanded,
+        toggle,
+      };
+    },
     props: {
+      sections: {
+        type: Array,
+        required: true,
+      },
       attemptLogs: {
         type: Array,
         required: true,
@@ -103,6 +193,12 @@
       },
     },
     computed: {
+      accordionStyleOverrides() {
+        return {
+          color: this.$themeTokens.text + '!important',
+          textDecoration: 'none',
+        };
+      },
       selected() {
         return this.options.find(o => o.value === this.selectedQuestionNumber + 1) || {};
       },
@@ -207,6 +303,15 @@
     padding-right: 1vw;
     padding-left: 1vw;
     cursor: pointer;
+  }
+
+  .accordion-header-label {
+    padding-left: 1em;
+
+    // Removes underline from section headings
+    /deep/.link-text {
+      text-decoration: none;
+    }
   }
 
 </style>
