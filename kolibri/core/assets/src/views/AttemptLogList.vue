@@ -8,14 +8,31 @@
       {{ $tr('answerHistoryLabel') }}
     </h3>
 
+    <div v-if="isMobile">
+      <KSelect
+        v-if="sectionSelectOptions.length > 1"
+        class="section-select"
+        :value="selectedSection"
+        :label="quizSectionsLabel$()"
+        :options="sectionSelectOptions"
+        :disabled="$attrs.disabled"
+        @change="handleSectionChange($event.value)"
+      />
+
+      <h2 v-else-if="selectedSection.label" class="section-select">
+        {{ selectedSection.label }}
+      </h2>
+
+    </div>
+
     <KSelect
       v-if="isMobile"
       class="history-select"
-      :value="selected"
-      aria-labelledby="answer-history-label"
-      :options="options"
+      :value="selectedQuestion"
+      :label="questionsLabel$()"
+      :options="questionSelectOptions"
       :disabled="$attrs.disabled"
-      @change="handleDropdownChange($event.value)"
+      @change="handleQuestionChange($event.value)"
     >
       <template #display>
         <AttemptLogItem
@@ -129,10 +146,11 @@
 <script>
 
   import useAccordion from 'kolibri-common/components/useAccordion';
-  import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
+  import { coreString } from 'kolibri.coreVue.mixins.commonCoreStrings';
+  import { enhancedQuizManagementStrings } from 'kolibri-common/strings/enhancedQuizManagementStrings';
   import AccordionItem from 'kolibri-common/components/AccordionItem';
   import AccordionContainer from 'kolibri-common/components/AccordionContainer';
-  import { watch } from 'kolibri.lib.vueCompositionApi';
+  import { computed, watch } from 'kolibri.lib.vueCompositionApi';
   import { toRefs } from '@vueuse/core';
   import AttemptLogItem from './AttemptLogItem';
 
@@ -143,8 +161,8 @@
       AccordionContainer,
       AccordionItem,
     },
-    mixins: [commonCoreStrings],
-    setup(props) {
+    setup(props, { emit }) {
+      const { questionsLabel$, quizSectionsLabel$ } = enhancedQuizManagementStrings;
       const { isSurvey, sections, selectedQuestionNumber } = toRefs(props);
       // No need to do this unless "practice quiz" begins to use the same sections structure
       // This means expand, isExpanded, and toggle cannot be referenced in any template code
@@ -169,13 +187,94 @@
         }
       }
 
+      const allQuestionsInOrder = computed(() => {
+        return sections.value.reduce((a, s) => [...a, ...s.questions], []);
+      });
+
+      const sectionSelectOptions = computed(() => {
+        return sections.value.map((section, index) => ({
+          value: index,
+          label: section.section_title,
+        }));
+      });
+
+      const currentSectionIndex = computed(() => {
+        let qCount = 0;
+        for (let i = 0; i < sections.value.length; i++) {
+          qCount += sections.value[i].questions.length;
+          if (qCount >= selectedQuestionNumber.value) {
+            return i;
+          }
+        }
+        return 0;
+      });
+
+      const currentSection = computed(() => {
+        return sections.value[currentSectionIndex.value];
+      });
+
+      const questionSelectOptions = computed(() => {
+        return currentSection.value.questions.map((question, index) => ({
+          value: question.item,
+          label: coreString('questionNumberLabel', {
+            questionNumber: index + 1,
+          }),
+        }));
+      });
+
+      // The question itself
+      const currentQuestion = computed(() => {
+        return allQuestionsInOrder.value[selectedQuestionNumber.value];
+      });
+
+      // The KSelect-shaped object for the current section
+      const selectedSection = computed(() => {
+        return sectionSelectOptions.value[currentSectionIndex.value];
+      });
+
+      // The KSelect-shaped object for the current question
+      const selectedQuestion = computed(() => {
+        return questionSelectOptions.value.find(opt => opt.value === currentQuestion.value.item);
+      });
+
+      function handleQuestionChange(item) {
+        const questionIndex = allQuestionsInOrder.value.findIndex(q => q.item === item);
+        if (questionIndex !== -1) {
+          emit('select', questionIndex);
+          expandCurrentSectionIfNeeded();
+        }
+      }
+
+      function handleSectionChange(index) {
+        const questionIndex = sections.value.slice(0, index).reduce((acc, s, i) => {
+          if (i !== index) {
+            acc += s.questions.length;
+            return acc;
+          } else {
+            // This will always be the last iteration thanks to slice
+            return acc + 1;
+          }
+        }, 0);
+        emit('select', questionIndex);
+        expandCurrentSectionIfNeeded();
+      }
+
       watch(selectedQuestionNumber, expandCurrentSectionIfNeeded);
       expandCurrentSectionIfNeeded();
 
       return {
+        handleSectionChange,
+        handleQuestionChange,
+        quizSectionsLabel$,
+        questionsLabel$,
         expand,
         isExpanded,
         toggle,
+        coreString,
+        selectedSection,
+        sectionSelectOptions,
+        selectedQuestion,
+        questionSelectOptions,
       };
     },
     props: {
@@ -207,21 +306,6 @@
           textDecoration: 'none',
         };
       },
-      selected() {
-        return this.options.find(o => o.value === this.selectedQuestionNumber + 1) || {};
-      },
-      options() {
-        let label = '';
-        return this.attemptLogs.map(attemptLog => {
-          label = this.coreString('questionNumberLabel', {
-            questionNumber: attemptLog.questionNumber,
-          });
-          return {
-            value: attemptLog.questionNumber,
-            label: label,
-          };
-        });
-      },
     },
     mounted() {
       this.$nextTick(() => {
@@ -229,9 +313,6 @@
       });
     },
     methods: {
-      handleDropdownChange(value) {
-        this.$emit('select', value - 1);
-      },
       setSelectedAttemptLog(questionNumber) {
         const listOption = this.$refs.attemptListOption[questionNumber];
         listOption.focus();
@@ -294,10 +375,16 @@
     list-style-type: none;
   }
 
+  .section-select {
+    max-width: 90%;
+    padding: 0.5em 0;
+    margin: 1em auto;
+  }
+
   .history-select {
     max-width: 90%;
     padding: 0.5em 0;
-    margin: auto;
+    margin: 0 auto;
   }
 
   /deep/.ui-select-dropdown {

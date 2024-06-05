@@ -103,7 +103,7 @@
           :class="windowIsSmall ? 'mobile-exercise-container' : ''"
           :style="{ backgroundColor: $themeTokens.surface }"
         >
-          <h3>{{ coreString('questionNumberLabel', { questionNumber: questionNumber + 1 }) }}</h3>
+          <h3>{{ questionNumberInSectionLabel }}</h3>
 
           <div v-if="!isSurvey" data-test="diff-business">
             <KCheckbox
@@ -323,6 +323,17 @@
       };
     },
     computed: {
+      questionNumberInSectionLabel() {
+        for (let iSection = 0; iSection < this.sections.length; iSection++) {
+          const section = this.sections[iSection];
+          for (let iQuestion = 0; iQuestion < section.questions.length; iQuestion++) {
+            if (section.questions[iQuestion].item === this.itemId) {
+              return this.coreString('questionNumberLabel', { questionNumber: iQuestion + 1 });
+            }
+          }
+        }
+        return '';
+      },
       attemptLogs() {
         if (this.isQuiz || this.isSurvey) {
           return this.quizAttempts();

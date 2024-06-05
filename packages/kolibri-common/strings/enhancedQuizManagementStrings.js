@@ -230,4 +230,8 @@ export const enhancedQuizManagementStrings = createTranslator('EnhancedQuizManag
   questionsUnusedInSection: {
     message: '{ count, number } { count, plural, one { question } other { questions }} unused',
   },
+  questionsLabel: {
+    message: 'Questions',
+    context: 'Label for dropdown list of questions',
+  },
 });

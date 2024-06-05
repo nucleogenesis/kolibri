@@ -65,12 +65,20 @@
                 </KGridItem>
               </KGrid>
               <div v-else style="overflow-x: visible">
-                <KSelect
-                  v-if="(windowIsSmall || windowIsMedium)"
-                  :value="currentSectionOption"
-                  :options="sectionSelectOptions"
-                  @select="handleSectionOptionChange"
-                />
+                <div v-if="(windowIsSmall || windowIsMedium)">
+                  <KSelect
+                    v-if="sectionSelectOptions.length > 1"
+                    :value="currentSectionOption"
+                    :options="sectionSelectOptions"
+                    @select="handleSectionOptionChange"
+                  />
+                  <h2
+                    v-else-if="currentSectionOption.label"
+                    class="section-select"
+                  >
+                    {{ currentSectionOption.label }}
+                  </h2>
+                </div>
                 <p> {{ currentSection.description }} </p>
                 <p v-if="content && content.duration">
                   {{ learnString('suggestedTime') }}
