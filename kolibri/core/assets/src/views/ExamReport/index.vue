@@ -79,6 +79,7 @@
         :attemptLogs="attemptLogs"
         :selectedQuestionNumber="questionNumber"
         :isSurvey="isSurvey"
+        :sections="sections"
         @select="navigateToQuestion"
       />
     </template>
@@ -93,6 +94,7 @@
           :attemptLogs="attemptLogs"
           :selectedQuestionNumber="questionNumber"
           :isSurvey="isSurvey"
+          :sections="sections"
           @select="navigateToQuestion"
         />
         <div
@@ -252,6 +254,12 @@
       navigateTo: {
         type: Function,
         required: true,
+      },
+      // The exam.question_sources value
+      sections: {
+        type: Array,
+        required: true,
+        default: () => [],
       },
       // An array of questions in the format:
       // {

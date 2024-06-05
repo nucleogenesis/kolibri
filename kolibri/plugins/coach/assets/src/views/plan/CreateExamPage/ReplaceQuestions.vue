@@ -18,11 +18,7 @@
       :style="{ borderTop: `solid 1px ${$themeTokens.fineLine}` }"
     >
     </span>
-    <AccordionContainer
-      :items="replacementQuestionPool.map(i => ({
-        id: i.id,
-      }))"
-    >
+    <AccordionContainer :items="replacementQuestionPool">
       <template #left-actions>
         <KCheckbox
           ref="selectAllCheckbox"
@@ -33,70 +29,83 @@
           @change="selectAllReplacementQuestions"
         />
       </template>
-      <template #default="{ toggleItemState, isItemExpanded }">
-        <AccordionItem
-          v-for="(question, index) in replacementQuestionPool"
-          :id="question.id"
-          :key="index"
-          :title="question.title"
-          :aria-selected="
-            replacements.length && replacements.length === selectedActiveQuestions.length
-          "
-        >
-          <template #heading="{ title }">
-            <h3
-              class="accordion-header"
-            >
-              <KCheckbox
-                class="accordion-checkbox"
-                :checked="replacements.map(r => r.id).includes(question.id)"
-                @change="() => toggleInReplacements(question)"
-              />
-              <KButton
-                tabindex="0"
-                appearance="basic-link"
-                :style="accordionStyleOverrides"
-                class="accordion-header-label"
-                :aria-expanded="isItemExpanded(question.id)"
-                :aria-controls="`question-panel-${question.id}`"
-                @click="toggleItemState(question.id)"
-              >
-                <span>{{ title + " " + question.counter_in_exercise }}</span>
-                <KIcon
-                  style="position: absolute; right:1em; top: 0.625em;"
-                  :icon="isItemExpanded(question.id) ?
-                    'chevronUp' : 'chevronRight'"
-                />
-              </KButton>
-            </h3>
-          </template>
-          <template #content>
-            <div
-              v-if="isItemExpanded(question.id)"
-              :id="`question-panel-${question.id}`"
-              :ref="`question-panel-${question.id}`"
-              :style="{ userSelect: dragActive ? 'none!important' : 'text' }"
-            >
-              <ContentRenderer
-                :ref="`contentRenderer-${question.id}`"
-                :kind="activeResourceMap[question.exercise_id].kind"
-                :lang="activeResourceMap[question.exercise_id].lang"
-                :files="activeResourceMap[question.exercise_id].files"
-                :available="activeResourceMap[question.exercise_id].available"
-                :itemId="question.question_id"
-                :assessment="true"
-                :allowHints="false"
-                :interactive="false"
-                @interaction="() => null"
-                @updateProgress="() => null"
-                @updateContentState="() => null"
-                @error="err => $emit('error', err)"
-              />
-            </div>
-          </template>
-        </AccordionItem>
+      <template #right-actions>
+        <KIconButton
+          icon="expandAll"
+          :tooltip="expandAll$()"
+          :disabled="!canExpandAll"
+          @click="expandAll"
+        />
+        <KIconButton
+          icon="collapseAll"
+          :tooltip="collapseAll$()"
+          :disabled="!canCollapseAll"
+          @click="collapseAll"
+        />
       </template>
+      <AccordionItem
+        v-for="(question, index) in replacementQuestionPool"
+        :id="`replacement-question-${question.item}`"
+        :key="`replacement-question-${question.item}`"
+        :title="question.title"
+        :aria-selected="
+          replacements.length && replacements.length === selectedActiveQuestions.length
+        "
+      >
+        <template #heading="{ title }">
+          <h3
+            class="accordion-header"
+          >
+            <KCheckbox
+              class="accordion-checkbox"
+              :checked="replacements.map(r => r.id).includes(question.id)"
+              @change="() => toggleInReplacements(question)"
+            />
+            <KButton
+              tabindex="0"
+              appearance="basic-link"
+              :style="accordionStyleOverrides"
+              class="accordion-header-label"
+              :aria-expanded="isExpanded(question.id)"
+              :aria-controls="`question-panel-${question.id}`"
+              @click="toggle(index)"
+            >
+              <span>{{ title + " " + question.counter_in_exercise }}</span>
+              <KIcon
+                style="position: absolute; right:1em; top: 0.625em;"
+                :icon="isExpanded(index) ?
+                  'chevronUp' : 'chevronRight'"
+              />
+            </KButton>
+          </h3>
+        </template>
+        <template #content>
+          <div
+            v-if="isExpanded(index)"
+            :id="`question-panel-${question.item}`"
+            :ref="`question-panel-${question.item}`"
+            :style="{ userSelect: dragActive ? 'none!important' : 'text' }"
+          >
+            <ContentRenderer
+              :ref="`contentRenderer-${question.item}`"
+              :kind="activeResourceMap[question.exercise_id].kind"
+              :lang="activeResourceMap[question.exercise_id].lang"
+              :files="activeResourceMap[question.exercise_id].files"
+              :available="activeResourceMap[question.exercise_id].available"
+              :itemId="question.question_id"
+              :assessment="true"
+              :allowHints="false"
+              :interactive="false"
+              @interaction="() => null"
+              @updateProgress="() => null"
+              @updateContentState="() => null"
+              @error="err => $emit('error', err)"
+            />
+          </div>
+        </template>
+      </AccordionItem>
     </AccordionContainer>
+
     <div class="bottom-navigation">
       <KGrid>
         <KGridItem
@@ -163,10 +172,11 @@
   import { getCurrentInstance, computed, ref } from 'kolibri.lib.vueCompositionApi';
   import { get } from '@vueuse/core';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
+  import AccordionItem from 'kolibri-common/components/AccordionItem';
+  import AccordionContainer from 'kolibri-common/components/AccordionContainer';
+  import useAccordion from 'kolibri-common/components/useAccordion';
   import { injectQuizCreation } from '../../../composables/useQuizCreation';
   import { PageNames } from '../../../constants/index';
-  import AccordionItem from './AccordionItem';
-  import AccordionContainer from './AccordionContainer';
   import NotEnoughResourcesModal from './NotEnoughResourcesModal';
 
   export default {
@@ -179,6 +189,7 @@
     mixins: [commonCoreStrings],
     setup(_, context) {
       const router = getCurrentInstance().proxy.$router;
+
       const {
         replaceQuestions$,
         deleteSectionLabel$,
@@ -192,7 +203,10 @@
         noUndoWarning$,
         selectMoreQuestion$,
         selectFewerQuestion$,
+        collapseAll$,
+        expandAll$,
       } = enhancedQuizManagementStrings;
+
       const {
         // Computed
         activeSection,
@@ -200,8 +214,6 @@
         activeResourceMap,
         replacementQuestionPool,
         clearSelectedQuestions,
-        toggleItemState,
-        isItemExpanded,
         replaceSelectedQuestions,
         toggleQuestionInSelection,
         updateSection,
@@ -265,7 +277,23 @@
         }
       }
 
+      const {
+        toggle,
+        isExpanded,
+        collapseAll,
+        expandAll,
+        canCollapseAll,
+        canExpandAll,
+      } = useAccordion(replacementQuestionPool);
+
       return {
+        toggle,
+        isExpanded,
+        collapseAll,
+        expandAll,
+        canCollapseAll,
+        canExpandAll,
+
         toggleInReplacements,
         activeSection,
         selectAllReplacementQuestions,
@@ -282,8 +310,6 @@
 
         handleConfirmClose,
         clearSelectedQuestions,
-        toggleItemState,
-        isItemExpanded,
         toggleQuestionInSelection,
         updateSection,
         submitReplacement,
@@ -299,6 +325,8 @@
         replaceQuestionsExplaination$,
         selectMoreQuestion$,
         selectFewerQuestion$,
+        collapseAll$,
+        expandAll$,
       };
     },
     computed: {

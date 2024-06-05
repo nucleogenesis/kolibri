@@ -227,4 +227,7 @@ export const enhancedQuizManagementStrings = createTranslator('EnhancedQuizManag
   goBackAction: {
     message: 'Go back',
   },
+  questionsUnusedInSection: {
+    message: '{ count, number } { count, plural, one { question } other { questions }} unused',
+  },
 });
