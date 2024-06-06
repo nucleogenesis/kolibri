@@ -292,11 +292,10 @@ export default function useQuizCreation() {
 
   /**
    * @returns {Promise<Quiz>}
-   * @throws {Error} if quiz is not valid
    */
   function saveQuiz() {
     if (!validateQuiz(get(_quiz))) {
-      throw new Error(`Quiz is not valid: ${JSON.stringify(get(_quiz))}`);
+      return Promise.reject(`Quiz is not valid: ${JSON.stringify(get(_quiz))}`);
     }
 
     const id = get(_quiz).id;
