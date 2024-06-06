@@ -331,7 +331,10 @@
   import { ref } from 'kolibri.lib.vueCompositionApi';
   import logging from 'kolibri.lib.logging';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
-  import { enhancedQuizManagementStrings } from 'kolibri-common/strings/enhancedQuizManagementStrings';
+  import {
+    displaySectionTitle,
+    enhancedQuizManagementStrings,
+  } from 'kolibri-common/strings/enhancedQuizManagementStrings';
   import DragContainer from 'kolibri.coreVue.components.DragContainer';
   import DragHandle from 'kolibri.coreVue.components.DragHandle';
   import DragSortWidget from 'kolibri.coreVue.components.DragSortWidget';
@@ -392,7 +395,6 @@
         setActiveSection,
         updateQuiz,
         selectAllQuestions,
-        displaySectionTitle,
 
         // Computed
         toggleQuestionInSelection,

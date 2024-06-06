@@ -235,3 +235,11 @@ export const enhancedQuizManagementStrings = createTranslator('EnhancedQuizManag
     context: 'Label for dropdown list of questions',
   },
 });
+
+const { sectionLabel$ } = enhancedQuizManagementStrings;
+
+export function displaySectionTitle(section, index) {
+  return section.section_title === ''
+    ? sectionLabel$({ sectionNumber: index + 1 })
+    : section.section_title;
+}

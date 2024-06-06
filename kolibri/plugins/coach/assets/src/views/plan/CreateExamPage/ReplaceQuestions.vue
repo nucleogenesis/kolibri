@@ -2,7 +2,7 @@
 
   <div class="wrapper">
     <h1 class="section-header" :style="{ color: `${$themeTokens.annotation}` }">
-      {{ activeSection.section_title }}
+      {{ activeSectionTitle }}
     </h1>
     <span
       class="divider"
@@ -168,9 +168,13 @@
 
 <script>
 
-  import { enhancedQuizManagementStrings } from 'kolibri-common/strings/enhancedQuizManagementStrings';
+  import {
+    displaySectionTitle,
+    enhancedQuizManagementStrings,
+  } from 'kolibri-common/strings/enhancedQuizManagementStrings';
   import { getCurrentInstance, computed, ref } from 'kolibri.lib.vueCompositionApi';
   import { get } from '@vueuse/core';
+  import isEqual from 'lodash/isEqual';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
   import AccordionItem from 'kolibri-common/components/AccordionItem';
   import AccordionContainer from 'kolibri-common/components/AccordionContainer';
@@ -219,7 +223,15 @@
         updateSection,
         handleReplacement,
         replacements,
+        allSections,
       } = injectQuizCreation();
+
+      const activeSectionTitle = computed(() => {
+        const activeSectionIndex = allSections.value.findIndex(section =>
+          isEqual(JSON.stringify(section), JSON.stringify(activeSection.value))
+        );
+        return displaySectionTitle(activeSection.value, activeSectionIndex);
+      });
 
       const showCloseConfirmation = ref(false);
       const showReplacementConfirmation = ref(false);
@@ -296,6 +308,7 @@
 
         toggleInReplacements,
         activeSection,
+        activeSectionTitle,
         selectAllReplacementQuestions,
         selectedActiveQuestions,
         replacementQuestionPool,

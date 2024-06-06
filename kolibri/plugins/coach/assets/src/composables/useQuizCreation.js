@@ -16,14 +16,6 @@ function uuidv4() {
   return v4().replace(/-/g, '');
 }
 
-const { sectionLabel$ } = enhancedQuizManagementStrings;
-
-function displaySectionTitle(section, index) {
-  return section.section_title === ''
-    ? sectionLabel$({ sectionNumber: index + 1 })
-    : section.section_title;
-}
-
 /** Validators **/
 /* objectSpecs expects every property to be available -- but we don't want to have to make an
  * object with every property just to validate it. So we use these functions to validate subsets
@@ -568,7 +560,6 @@ export default function useQuizCreation() {
     clearSelectedQuestions,
     addQuestionToSelection,
     removeQuestionFromSelection,
-    displaySectionTitle,
 
     // Computed
     channels,
@@ -636,7 +627,6 @@ export function injectQuizCreation() {
     addQuestionToSelection,
     removeQuestionFromSelection,
     toggleQuestionInSelection,
-    displaySectionTitle,
 
     // Computed
     allQuestionsSelected,

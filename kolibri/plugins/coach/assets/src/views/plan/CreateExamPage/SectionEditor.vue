@@ -260,7 +260,10 @@
   import isEqual from 'lodash/isEqual';
   import pick from 'lodash/pick';
   import { getCurrentInstance, computed, ref } from 'kolibri.lib.vueCompositionApi';
-  import { enhancedQuizManagementStrings } from 'kolibri-common/strings/enhancedQuizManagementStrings';
+  import {
+    displaySectionTitle,
+    enhancedQuizManagementStrings,
+  } from 'kolibri-common/strings/enhancedQuizManagementStrings';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import Draggable from 'kolibri.coreVue.components.Draggable';
@@ -313,7 +316,6 @@
         updateQuiz,
         removeSection,
         channels,
-        displaySectionTitle,
       } = injectQuizCreation();
 
       const showCloseConfirmation = ref(false);
