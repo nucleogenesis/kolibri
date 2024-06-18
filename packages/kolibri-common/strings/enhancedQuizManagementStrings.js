@@ -251,13 +251,16 @@ export const enhancedQuizManagementStrings = createTranslator('EnhancedQuizManag
     context:
       'Message of modal when a user tries to replace more questions than are available in the pool',
   },
+  editRecipients: {
+    message: 'Edit recipients',
+  },
   addMoreQuestionsWithEmptyPool: {
     message: 'You can add more questions, or delete existing questions.',
     context: 'Message of modal when a user tries to replace questions but the pool is empty',
   },
   addMoreQuestionsWithNonEmptyPool: {
     message:
-      'You can add more questions, delete existing questions, or go back and select fewer questions',
+      'You can go back and select { count, number } { count, plural, one { question } other { questions or fewer }} to replace.',
     context:
       'Message of modal when a user tries to replace more questions than are available in the pool',
   },
