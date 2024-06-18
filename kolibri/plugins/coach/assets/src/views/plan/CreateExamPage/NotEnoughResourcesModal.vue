@@ -16,11 +16,8 @@
     </p>
     <p v-if="availableQuestions.length">
       {{
-        addMoreQuestionsWithNonEmptyPool$()
+        addMoreQuestionsWithNonEmptyPool$({ count: availableQuestions.length })
       }}
-    </p>
-    <p v-else>
-      {{ addMoreQuestionsWithEmptyPool$() }}
     </p>
     <template #actions>
       <KButtonGroup>
@@ -28,12 +25,6 @@
           @click="() => $emit('close')"
         >
           {{ goBackAction$() }}
-        </KButton>
-        <KButton
-          primary
-          @click="() => $emit('addResources')"
-        >
-          {{ addQuestions$() }}
         </KButton>
       </KButtonGroup>
     </template>
