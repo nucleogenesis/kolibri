@@ -149,13 +149,13 @@
         return this.$route.params.classId;
       },
     },
-    beforeRouteEnter(to, from, next) {
-      return fetchQuizSummaryPageData(to.params.quizId)
+    created() {
+      return fetchQuizSummaryPageData(this.$route.params.quizId)
         .then(data => {
-          next(vm => vm.setData(data));
+          this.setData(data);
         })
         .catch(error => {
-          next(vm => vm.setError(error));
+          this.setError(error);
         });
     },
     methods: {
@@ -240,7 +240,7 @@
           });
       },
       handleSubmitDelete() {
-        return deleteExam(this.quiz.id)
+        return deleteExam(this.$route.params.quizId)
           .then(() => {
             this.$store.commit('classSummary/DELETE_ITEM', { map: 'examMap', id: this.quiz.id });
             this.$router.replace(this.$router.getRoute('EXAMS'), () => {
