@@ -150,7 +150,7 @@
     methods: {
       // @public
       setData(data) {
-        const { exam, exercises } = data;
+        const { exercises } = data;
         this.selectedExercises = fromPairs(exercises.map(x => [x.id, x]));
         this.loading = false;
         this.$store.dispatch('notLoading');
