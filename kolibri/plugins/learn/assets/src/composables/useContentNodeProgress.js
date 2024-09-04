@@ -12,6 +12,25 @@ import { ContentNodeProgressResource } from 'kolibri.resources';
 // The reactive is defined in the outer scope so it can be used as a shared store
 const contentNodeProgressMap = reactive({});
 
+// The full API request data mapped to content_id
+const contentNodeProgressMetadataMap = reactive({});
+
+/**
+ * 1) Change `contentNodeProgressMap` so that the values are objects
+   contentNodeProgressMap { [content_id]: <progres:float> } contentNodeProgressMap[some_id] > 0.81
+   contentNodeProgressMap { [content_id]: { progress: float, num_attempts: int, <etc>, }}
+   if(not practice quiz) {
+       contentNodeProgressMap[some_id]['progress']
+   } else {
+     const { num_correct_attempts, total_questions } = contentNodeProgressMap[some_id];
+   }
+
+ * 2) const contentNodeProgressDataMap
+   contentNodeProgressDataMap { [content_id]: { progress: float, num_attempts: int, <etc>, }}
+  
+ */
+       
+
 export function setContentNodeProgress(progress) {
   // Avoid setting stale progress data - assume that progress increases monotonically
   if (
@@ -58,6 +77,7 @@ export default function useContentNodeProgress() {
       params,
       id,
     }).then(progressData => {
+      console.log(progressData)
       const progresses = progressData ? progressData : [];
       for (const progress of progresses) {
         setContentNodeProgress(progress);

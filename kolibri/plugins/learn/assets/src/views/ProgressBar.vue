@@ -51,8 +51,8 @@
     },
     mixins: [commonCoreStrings],
     setup() {
-      const { contentNodeProgressMap } = useContentNodeProgress();
-      return { contentNodeProgressMap };
+      const { contentNodeProgressMap, contentNodeMetadataMap } = useContentNodeProgress();
+      return { contentNodeProgressMap, contentNodeMetadataMap };
     },
     props: {
       // eslint-disable-next-line kolibri/vue-no-unused-properties
@@ -65,6 +65,10 @@
       progress() {
         return this.contentNodeProgressMap[this.contentNode && this.contentNode.content_id] || 0;
       },
+      practiceQuizProgress() {
+        const { num_correct, total_questions } = this.contentNodeMetadataMap[this.contentNode.content_id];
+        return num_correct / total_questions;
+      }
       completed() {
         return this.progress >= 1;
       },
