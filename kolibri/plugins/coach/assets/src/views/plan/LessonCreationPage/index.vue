@@ -20,6 +20,23 @@
         @cancel="() => $router.go(-1)"
       />
     </KPageContainer>
+    <SidePanelModal
+      v-if="showSidePanel"
+      ref="resourcePanel"
+      alignment="right"
+      sidePanelWidth="700px"
+      closeButtonIconType="close"
+      @closePanel="() => null"
+    >
+      <template #header>
+        <KIconButton
+          v-if="true"
+          icon="back"
+          @click="$router.go(-1)"
+        />
+      </template>
+      <router-view @closePanel="() => null" />
+    </SidePanelModal>
   </CoachImmersivePage>
 
 </template>
@@ -27,11 +44,13 @@
 
 <script>
 
+  import SidePanelModal from 'kolibri-common/components/SidePanelModal';
   import { ERROR_CONSTANTS } from 'kolibri.coreVue.vuex.constants';
   import CatchErrors from 'kolibri.utils.CatchErrors';
   import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
   import AssignmentDetailsModal from '../assignments/AssignmentDetailsModal';
   import commonCoach from '../../common';
+  import { LessonsPageNames } from '../../../constants/lessonsConstants';
   import CoachImmersivePage from '../../CoachImmersivePage';
 
   export default {
@@ -39,9 +58,13 @@
     components: {
       AssignmentDetailsModal,
       CoachImmersivePage,
+      SidePanelModal,
     },
     mixins: [commonCoach, commonCoreStrings],
     computed: {
+      showSidePanel() {
+        return this.$route.name !== LessonsPageNames.LESSON_CREATION_ROOT;
+      },
       classId() {
         return this.$route.params.classId;
       },

@@ -58,6 +58,33 @@ export default [
     component: LessonCreationPage,
   },
   {
+    name: LessonsPageNames.LESSON_CREATION_ROOT_BUT_BETTER,
+    path: '/:classId/plan/lessons-0.18/:lessonId/edit',
+    component: LessonCreationPage,
+    children: [
+      {
+        name: PageNames.LESSON_EDIT_DETAILS,
+        path: 'details/',
+        component: LessonEditDetailsPage,
+      },
+      {
+        name: PageNames.LESSON_SELECT_RESOURCES,
+        path: 'select-resources/:topicId?',
+        component: LessonEditDetailsPage,
+      },
+      {
+        name: PageNames.LESSON_PREVIEW_SELECTED_RESOURCES,
+        path: 'preview-resources/',
+        component: LessonEditDetailsPage,
+      },
+      {
+        name: PageNames.LESSON_PREVIEW_RESOURCE,
+        path: 'preview-resources/:nodeId',
+        component: LessonEditDetailsPage,
+      },
+    ],
+  },
+  {
     name: LessonsPageNames.SUMMARY,
     path: path(CLASS, LESSON),
     component: LessonSummaryPage,
