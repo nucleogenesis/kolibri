@@ -15,12 +15,12 @@
         <h1 class="select-folder-style">
           {{
             selectResourcesDescription$({
-              sectionTitle: displaySectionTitle(activeSection, activeSectionIndex),
+              sectionTitle: '', //displaySectionTitle(activeSection, activeSectionIndex),
             })
           }}
         </h1>
         <p>
-          {{ numberOfQuestionsSelected$({ count: activeQuestions.length }) }}
+          {{ numberOfQuestionsSelected$({ count: 0 /*activeQuestions.length*/ }) }}
           <span
             class="divider"
             :style="{ borderTop: `solid 1px ${$themeTokens.fineLine}` }"
@@ -118,7 +118,7 @@
       >
         {{
           cannotSelectSomeTopicWarning$({
-            count: Math.max(maxSectionQuestionOptions, workingPoolUnusedQuestions),
+            count: 0, //Math.max(maxSectionQuestionOptions, workingPoolUnusedQuestions),
           })
         }}
       </div>
@@ -233,20 +233,10 @@
       // to be added to Quiz Section.
       const showBookmarks = computed(() => route.value.query.showBookmarks);
       const searchQuery = computed(() => route.value.query.search);
-      const {
-        activeSection,
-        activeSectionIndex,
-        allResourceMap,
-        updateSection,
-        addQuestionsToSectionFromResources,
-        selectAllQuestions,
-        allQuestionsInQuiz,
-        activeQuestions,
-        addSection,
-      } = injectQuizCreation();
+
       const showCloseConfirmation = ref(false);
       const maxQuestions = computed(
-        () => MAX_QUESTIONS_PER_QUIZ_SECTION - activeQuestions.value.length,
+        () => MAX_QUESTIONS_PER_QUIZ_SECTION - 0//activeQuestions.value.length,
       );
 
       const questionCount = ref(Math.min(10, maxQuestions.value));
@@ -494,7 +484,7 @@
           const questionItems = content.assessmentmetadata.assessment_item_ids.map(
             aid => `${content.id}:${aid}`,
           );
-          const questionsItemsAlreadyUsed = allQuestionsInQuiz.value
+          const questionsItemsAlreadyUsed = []//allQuestionsInQuiz.value
             .map(q => q.item)
             .filter(i => questionItems.includes(i));
           const questionItemsAvailable = questionItems.length - questionsItemsAlreadyUsed.length;
@@ -502,15 +492,7 @@
         }
         if (content.kind === ContentNodeKinds.TOPIC || content.kind === ContentNodeKinds.CHANNEL) {
           const total = content.num_assessments;
-          const numberOfQuestionsSelected = allQuestionsInQuiz.value.filter(question => {
-            const questionNode = allResourceMap.value[question.exercise_id];
-            for (const ancestor of questionNode.ancestors) {
-              if (ancestor.id === content.id) {
-                return true;
-              }
-            }
-            return false;
-          }).length;
+          const numberOfQuestionsSelected = 0;
           return total - numberOfQuestionsSelected;
         }
         return -1;
@@ -539,7 +521,7 @@
         // and adding it would not exceed the remaining maxSectionQuestionOptions.
         const count = unusedQuestionsCount(node);
         return (
-          count > 0 && count + workingPoolUnusedQuestions.value <= maxSectionQuestionOptions.value
+          count > 0 && count + 0 //workingPoolUnusedQuestions.value <= maxSectionQuestionOptions.value
         );
       }
 
@@ -703,14 +685,8 @@
       return {
         nodeIsSelectableOrUnselectable,
         showCheckbox,
-        displaySectionTitle,
+        displaySectionTitle: () => null,
         unusedQuestionsCount,
-        activeSection,
-        activeSectionIndex,
-        activeQuestions,
-        addSection,
-        allResourceMap,
-        allQuestionsInQuiz,
         selectAllChecked,
         selectAllIndeterminate,
         showSelectAll,
@@ -734,9 +710,9 @@
         contentPartlyPresentInWorkingResourcePool,
         questionCount,
         maxQuestions,
-        maxSectionQuestionOptions,
+        //maxSectionQuestionOptions,
         MAX_QUESTIONS_PER_QUIZ_SECTION,
-        workingPoolUnusedQuestions,
+        //workingPoolUnusedQuestions,
         disableSave,
         cannotSelectSomeTopicWarning$,
         closeConfirmationMessage$,
@@ -753,9 +729,6 @@
         bookmarks,
         channels,
         viewMoreButtonState,
-        updateSection,
-        addQuestionsToSectionFromResources,
-        selectAllQuestions,
         workingResourcePool,
         addToWorkingResourcePool,
         removeFromWorkingResourcePool,
@@ -873,11 +846,7 @@
             sectionIndex++;
           }
         } else {
-          this.addQuestionsToSectionFromResources({
-            sectionIndex: this.activeSectionIndex,
-            resourcePool: this.workingResourcePool,
-            questionCount: this.questionCount,
-          });
+        //nothing
         }
 
         this.resetWorkingResourcePool();
