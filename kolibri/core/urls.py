@@ -32,6 +32,8 @@ return the module.
 """
 from django.urls import include
 from django.urls import re_path
+from django.urls import path
+from django.contrib import admin
 from rest_framework import routers
 
 from .views import GuestRedirectView
@@ -72,6 +74,9 @@ core_urlpatterns = (
 )
 
 
-urlpatterns = [re_path(r"", include(core_urlpatterns))]
+urlpatterns = [
+    path(r"^admin/", admin.site.urls),
+    re_path(r"", include(core_urlpatterns))
+]
 
 urlpatterns += plugin_urls()

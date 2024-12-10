@@ -40,3 +40,4 @@ REST_FRAMEWORK = {
 }
 
 SWAGGER_SETTINGS = {"DEFAULT_INFO": "kolibri.deployment.default.dev_urls.api_info"}
+
