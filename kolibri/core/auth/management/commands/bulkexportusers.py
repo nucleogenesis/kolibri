@@ -28,7 +28,6 @@ from kolibri.core.tasks.management.commands.base import AsyncCommand
 from kolibri.core.tasks.utils import get_current_job
 from kolibri.core.utils.csv import open_csv_for_writing
 from kolibri.core.utils.csv import output_mapper
-from kolibri.utils import conf
 
 try:
     FileNotFoundError
@@ -152,18 +151,16 @@ def translate_labels():
     )
 
 
-def csv_file_generator(facility, filepath, overwrite=True):
-    if not overwrite and os.path.exists(filepath):
-        raise ValueError("{} already exists".format(filepath))
+def csv_file_generator(facility, filename, overwrite=True):
+    if not overwrite and os.path.exists(filename):
+        raise ValueError("{} already exists".format(filename))
     queryset = FacilityUser.objects.filter(facility=facility)
 
     header_labels = translate_labels().values()
 
-    csv_file = open_csv_for_writing(filepath)
-
-    with csv_file as f:
+    with open_csv_for_writing(filename) as f:
         writer = csv.DictWriter(f, header_labels)
-        logger.info("Creating csv file {filename}".format(filename=filepath))
+        logger.info("Creating csv file {filename}".format(filename=filename))
         writer.writeheader()
         usernames = set()
 
@@ -248,18 +245,14 @@ class Command(AsyncCommand):
 
         return default_facility
 
-    def get_filepath(self, options, facility):
+    def get_filename(self, options, facility):
         if options["output_file"] is None:
-            export_dir = os.path.join(conf.KOLIBRI_HOME, "log_export")
-            if not os.path.isdir(export_dir):
-                os.mkdir(export_dir)
-            filepath = os.path.join(
-                export_dir,
-                CSV_EXPORT_FILENAMES["user"].format(facility.name, facility.id[:4]),
+            filename = CSV_EXPORT_FILENAMES["user"].format(
+                facility.name, facility.id[:4]
             )
         else:
-            filepath = os.path.join(os.getcwd(), options["output_file"])
-        return filepath
+            filename = options["output_file"]
+        return filename
 
     def handle_async(self, *args, **options):
         # set language for the translation of the messages
@@ -268,14 +261,14 @@ class Command(AsyncCommand):
 
         self.overall_error = []
         facility = self.get_facility(options)
-        filepath = self.get_filepath(options, facility)
+        filename = self.get_filename(options, facility)
         job = get_current_job()
         total_rows = FacilityUser.objects.filter(facility=facility).count()
 
         with self.start_progress(total=total_rows) as progress_update:
             try:
                 for row in csv_file_generator(
-                    facility, filepath, overwrite=options["overwrite"]
+                    facility, filename, overwrite=options["overwrite"]
                 ):
                     progress_update(1)
             except (ValueError, IOError) as e:
@@ -288,11 +281,11 @@ class Command(AsyncCommand):
             if job:
                 job.extra_metadata["overall_error"] = self.overall_error
                 job.extra_metadata["users"] = total_rows
-                job.extra_metadata["filename"] = ntpath.basename(filepath)
+                job.extra_metadata["filename"] = ntpath.basename(filename)
                 job.save_meta()
             else:
                 logger.info(
-                    "Created csv file {} with {} lines".format(filepath, total_rows)
+                    "Created csv file {} with {} lines".format(filename, total_rows)
                 )
 
         translation.deactivate()

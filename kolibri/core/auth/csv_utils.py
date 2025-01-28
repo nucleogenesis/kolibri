@@ -159,9 +159,9 @@ db_columns = (
 )
 
 
-def csv_file_generator(facility, filepath, overwrite=True, demographic=False):
-    if not overwrite and os.path.exists(filepath):
-        raise ValueError("{} already exists".format(filepath))
+def csv_file_generator(facility, filename, overwrite=True, demographic=False):
+    if not overwrite and os.path.exists(filename):
+        raise ValueError("{} already exists".format(filename))
     queryset = FacilityUser.objects.filter(facility=facility)
 
     header_labels = tuple(
@@ -174,7 +174,7 @@ def csv_file_generator(facility, filepath, overwrite=True, demographic=False):
         column for column in db_columns if demographic or column not in DEMO_FIELDS
     )
 
-    csv_file = open_csv_for_writing(filepath)
+    csv_file = open_csv_for_writing(filename)
 
     mappings = {}
 
@@ -186,7 +186,7 @@ def csv_file_generator(facility, filepath, overwrite=True, demographic=False):
 
     with csv_file as f:
         writer = csv.DictWriter(f, header_labels)
-        logger.info("Creating csv file {filename}".format(filename=filepath))
+        logger.info("Creating csv file {filename}".format(filename=filename))
         writer.writeheader()
         usernames = set()
         for item in (

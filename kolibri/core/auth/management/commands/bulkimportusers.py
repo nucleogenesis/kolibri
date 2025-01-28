@@ -483,8 +483,7 @@ class Command(AsyncCommand):
         self.overall_error.append(str(msg))
 
     def csv_headers_validation(self, filepath):
-        csv_file = open_csv_for_reading(filepath)
-        with csv_file as f:
+        with open_csv_for_reading(filepath) as f:
             header = next(csv.reader(f, strict=True))
             has_header = False
             self.header_translation = {
@@ -882,8 +881,7 @@ class Command(AsyncCommand):
             self.exit_if_error()
             self.progress_update(1)  # state=csv_headers
             try:
-                csv_file = open_csv_for_reading(filepath)
-                with csv_file as f:
+                with open_csv_for_reading(filepath) as f:
                     reader = csv.DictReader(f, strict=True)
                     per_line_errors, classes, users, roles = self.csv_values_validation(
                         reader, self.header_translation, self.default_facility
