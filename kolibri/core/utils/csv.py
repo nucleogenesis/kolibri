@@ -1,14 +1,38 @@
 import io
 import re
+from contextlib import contextmanager
 from numbers import Number
 
-
-def open_csv_for_writing(filepath):
-    return io.open(filepath, "w", newline="", encoding="utf-8-sig")
+from django.core.files.storage import default_storage
 
 
-def open_csv_for_reading(filepath):
-    return io.open(filepath, "r", newline="", encoding="utf-8-sig")
+@contextmanager
+def open_csv_for_writing(filename):
+    if default_storage.exists(filename):
+        # If the file exists, we need to open it and return it wrapped in a TextIOWrapper
+        with default_storage.open(filename, "wb") as f:
+            encoded_fh = io.TextIOWrapper(
+                f, newline="", encoding="utf-8-sig", write_through=True
+            )
+            yield encoded_fh
+            encoded_fh.flush()
+            default_storage.save(filename, f)
+    else:
+        # If the file does not exist, we need to create it and return it wrapped in a TextIOWrapper
+        with io.StringIO() as f:
+            yield f
+            encoded_fh = io.TextIOWrapper(
+                f, newline="", encoding="utf-8-sig", write_through=True
+            )
+            # yield encoded_fh
+            # encoded_fh.flush()
+            default_storage.save(filename, encoded_fh.buffer)
+
+
+@contextmanager
+def open_csv_for_reading(filename):
+    with default_storage.open(filename, "r") as f:
+        yield f
 
 
 negative_number_regex = re.compile("^-?[0-9,\\.]+$")
