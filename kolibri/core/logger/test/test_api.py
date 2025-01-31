@@ -6,7 +6,6 @@ Also tests whether the users with permissions can create logs.
 import csv
 import datetime
 import os
-import tempfile
 import uuid
 
 import mock
@@ -64,7 +63,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
 
     def test_csv_download(self):
         expected_count = ContentSummaryLog.objects.count()
-        _, filepath = tempfile.mkstemp(suffix=".csv")
+        filepath = "{}.csv".format(uuid.uuid4())
         call_command(
             "exportlogs",
             log_type="summary",
@@ -88,7 +87,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
         expected_count = ContentSummaryLog.objects.count()
         ContentNode.objects.all().delete()
         ChannelMetadata.objects.all().delete()
-        _, filepath = tempfile.mkstemp(suffix=".csv")
+        filepath = "{}.csv".format(uuid.uuid4())
         call_command(
             "exportlogs",
             log_type="summary",
@@ -120,7 +119,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
             )
 
         expected_count = ContentSummaryLog.objects.count()
-        _, filepath = tempfile.mkstemp(suffix=".csv")
+        filepath = "{}.csv".format(uuid.uuid4())
         call_command(
             "exportlogs",
             log_type="summary",
@@ -227,7 +226,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
 
     def test_csv_download(self):
         expected_count = ContentSessionLog.objects.count()
-        _, filepath = tempfile.mkstemp(suffix=".csv")
+        filepath = "{}.csv".format(uuid.uuid4())
         call_command(
             "exportlogs",
             log_type="session",
@@ -251,7 +250,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         expected_count = ContentSessionLog.objects.count()
         ContentNode.objects.all().delete()
         ChannelMetadata.objects.all().delete()
-        _, filepath = tempfile.mkstemp(suffix=".csv")
+        filepath = "{}.csv".format(uuid.uuid4())
         call_command(
             "exportlogs",
             log_type="session",
@@ -283,7 +282,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
             )
 
         expected_count = ContentSessionLog.objects.count()
-        _, filepath = tempfile.mkstemp(suffix=".csv")
+        filepath = "{}.csv".format(uuid.uuid4())
         call_command(
             "exportlogs",
             log_type="session",
@@ -304,7 +303,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         )
 
     def test_csv_download_no_completion_timestamp(self):
-        _, filepath = tempfile.mkstemp(suffix=".csv")
+        filepath = "{}.csv".format(uuid.uuid4())
         call_command(
             "exportlogs",
             log_type="session",

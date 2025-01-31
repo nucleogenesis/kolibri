@@ -4,11 +4,11 @@ Tests that ensure the correct items are returned from api calls.
 Also tests whether the users with permissions can create logs.
 """
 import datetime
-import os
 import uuid
 
 import mock
 import pytz
+from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APITestCase
@@ -21,29 +21,22 @@ from kolibri.core.logger.test.factory_logger import ContentSessionLogFactory
 from kolibri.core.logger.test.factory_logger import ContentSummaryLogFactory
 from kolibri.core.logger.test.factory_logger import FacilityUserFactory
 from kolibri.plugins.facility.views import CSV_EXPORT_FILENAMES
-from kolibri.utils import conf
 from kolibri.utils.time_utils import utc_now
 
 
 def output_filename(log_type, facility, **kwargs):
-    logs_dir = os.path.join(conf.KOLIBRI_HOME, "log_export")
-    if not os.path.isdir(logs_dir):
-        os.mkdir(logs_dir)
     if log_type in ("summary", "session"):
         start_date = kwargs.get("start_date")
         end_date = kwargs.get("end_date")
-        log_path = os.path.join(
-            logs_dir,
+        return default_storage.get_available_name(
             CSV_EXPORT_FILENAMES[log_type].format(
                 facility.name, facility.id[:4], start_date[:10], end_date[:10]
-            ),
+            )
         )
     else:
-        log_path = os.path.join(
-            logs_dir,
-            CSV_EXPORT_FILENAMES[log_type].format(facility.name, facility.id[:4]),
+        return default_storage.get_available_name(
+            CSV_EXPORT_FILENAMES[log_type].format(facility.name, facility.id[:4])
         )
-    return log_path
 
 
 class ContentSummaryLogCSVExportTestCase(APITestCase):

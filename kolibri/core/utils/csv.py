@@ -34,8 +34,16 @@ def open_csv_for_writing(filename):
 
 @contextmanager
 def open_csv_for_reading(filename):
-    with default_storage.open(filename, "r") as f:
-        yield f
+    with default_storage.open(filename, "rb") as f:
+        encoded_fh = io.TextIOWrapper(
+            f,
+            newline="",
+            encoding="utf-8-sig",
+            write_through=True,
+            line_buffering=True,
+        )
+        yield encoded_fh
+        encoded_fh.flush()
 
 
 negative_number_regex = re.compile("^-?[0-9,\\.]+$")

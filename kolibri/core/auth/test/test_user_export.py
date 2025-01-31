@@ -3,7 +3,6 @@ Tests that ensure the correct items are returned from api calls.
 Also tests whether the users with permissions can create logs.
 """
 import csv
-import tempfile
 
 from django.core.management import call_command
 from django.test import TestCase
@@ -57,12 +56,12 @@ class UserCSVExportTestCase(TestCase):
         for user in users:
             FacilityUser.objects.create(facility=facility, **user)
         expected_count = FacilityUser.objects.count()
-        _, filepath = tempfile.mkstemp(suffix=".csv")
+        filename = "csv_export_with_demogs.csv"
         call_command(
-            "exportusers", output_file=filepath, overwrite=True, demographic=True
+            "exportusers", output_file=filename, overwrite=True, demographic=True
         )
-        csv_file = open_csv_for_reading(filepath)
-        with csv_file as f:
+
+        with open_csv_for_reading(filename) as f:
             results = [row for row in csv.DictReader(f)]
 
         for row in results:
@@ -91,12 +90,12 @@ class UserCSVExportTestCase(TestCase):
         for user in users:
             FacilityUser.objects.create(facility=facility, **user)
         expected_count = FacilityUser.objects.count()
-        _, filepath = tempfile.mkstemp(suffix=".csv")
+        filename = "csv_no_demogs.csv"
         call_command(
-            "exportusers", output_file=filepath, overwrite=True, demographic=False
+            "exportusers", output_file=filename, overwrite=True, demographic=False
         )
-        csv_file = open_csv_for_reading(filepath)
-        with csv_file as f:
+
+        with open_csv_for_reading(filename) as f:
             results = [row for row in csv.DictReader(f)]
 
         self.assertEqual(len(results), expected_count)
@@ -112,12 +111,11 @@ class UserCSVExportTestCase(TestCase):
         user_obj = FacilityUser.objects.create(facility=facility, **user)
         classroom1.add_member(user_obj)
         classroom2.add_member(user_obj)
-        _, filepath = tempfile.mkstemp(suffix=".csv")
+        filename = "csv_no_user_multiple_classes.csv"
         call_command(
-            "exportusers", output_file=filepath, overwrite=True, demographic=True
+            "exportusers", output_file=filename, overwrite=True, demographic=True
         )
-        csv_file = open_csv_for_reading(filepath)
-        with csv_file as f:
+        with open_csv_for_reading(filename) as f:
             results = [row for row in csv.DictReader(f)]
 
         self.assertEqual(len(results), 2)
@@ -130,12 +128,11 @@ class UserCSVExportTestCase(TestCase):
         user_obj = FacilityUser.objects.create(facility=facility, **user)
         classroom.add_member(user_obj)
         group.add_member(user_obj)
-        _, filepath = tempfile.mkstemp(suffix=".csv")
+        filename = "csv_no_1class1group.csv"
         call_command(
-            "exportusers", output_file=filepath, overwrite=True, demographic=True
+            "exportusers", output_file=filename, overwrite=True, demographic=True
         )
-        csv_file = open_csv_for_reading(filepath)
-        with csv_file as f:
+        with open_csv_for_reading(filename) as f:
             results = [row for row in csv.DictReader(f)]
 
         self.assertEqual(len(results), 2)
