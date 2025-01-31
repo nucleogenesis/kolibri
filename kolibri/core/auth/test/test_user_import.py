@@ -1,7 +1,6 @@
 import csv
-import os
-import tempfile
 
+from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
@@ -137,11 +136,8 @@ users = [
 
 class DeviceNotSetup(TestCase):
     def test_device_not_setup(self):
-        csvfile, csvpath = tempfile.mkstemp(suffix="csv")
         with self.assertRaisesRegex(CommandError, "No default facility exists"):
-            call_command("importusers", csvpath)
-        os.close(csvfile)
-        os.remove(csvpath)
+            call_command("importusers", "you_cannot_import_yet.csv")
 
 
 class UserImportCommandTestCase(TestCase):
@@ -157,34 +153,32 @@ class UserImportCommandTestCase(TestCase):
         self.facility, self.superuser = setup_device()
 
     def setUp(self):
-        self.csvfile, self.csvpath = tempfile.mkstemp(suffix="csv")
+        self.csvfilename = default_storage.get_available_name("test.csv")
 
     def tearDown(self):
         FacilityUser.objects.exclude(username=self.superuser.username).delete()
-        os.close(self.csvfile)
-        os.remove(self.csvpath)
+        default_storage.delete(self.csvfilename)
 
     def importFromRows(self, *args):
-        csv_file = open_csv_for_writing(self.csvpath)
-        with csv_file as f:
+        with open_csv_for_writing(self.csvfilename) as f:
             writer = csv.writer(f)
             writer.writerows([a for a in args])
 
-        call_command("importusers", self.csvpath)
+        call_command("importusers", self.csvfilename)
 
     def test_setup_headers_no_username(self):
         with self.assertRaisesRegex(CommandError, "No usernames specified"):
             self.importFromRows(["class", "facility"])
-            call_command("importusers", self.csvpath)
+            call_command("importusers", self.csvfilename)
 
     def test_setup_headers_invalid_header(self):
         with self.assertRaisesRegex(CommandError, "Mix of valid and invalid header"):
             self.importFromRows(["class", "facility", "dogfood"])
-            call_command("importusers", self.csvpath)
+            call_command("importusers", self.csvfilename)
 
     def test_setup_headers_make_user(self):
         self.importFromRows(["username"], ["testuser"])
-        call_command("importusers", self.csvpath)
+        call_command("importusers", self.csvfilename)
         self.assertTrue(FacilityUser.objects.filter(username="testuser").exists())
 
     def test_setup_no_headers_make_user(self):
@@ -271,10 +265,13 @@ class UserImportCommandTestCase(TestCase):
         for user in users:
             FacilityUser.objects.create(facility=self.facility, **user)
         call_command(
-            "exportusers", output_file=self.csvpath, overwrite=True, demographic=True
+            "exportusers",
+            output_file=self.csvfilename,
+            overwrite=True,
+            demographic=True,
         )
         FacilityUser.objects.all().delete()
-        call_command("importusers", self.csvpath)
+        call_command("importusers", self.csvfilename)
         for user in users:
             user_model = FacilityUser.objects.get(username=user["username"])
             self.assertEqual(user_model.gender, user["gender"])
@@ -284,16 +281,18 @@ class UserImportCommandTestCase(TestCase):
     def test_import_from_export_missing_headers(self):
         for user in users:
             FacilityUser.objects.create(facility=self.facility, **user)
+
         call_command(
-            "exportusers", output_file=self.csvpath, overwrite=True, demographic=True
+            "exportusers",
+            output_file=self.csvfilename,
+            overwrite=True,
+            demographic=True,
         )
         cols_to_remove = ["Facility id", "Gender"]
-        csv_file = open_csv_for_reading(self.csvpath)
-        with csv_file as source:
+        with open_csv_for_reading(self.csvfilename) as source:
             reader = csv.DictReader(source)
             rows = [row for row in reader]
-        csv_file = open_csv_for_writing(self.csvpath)
-        with csv_file as result:
+        with open_csv_for_writing("new" + self.csvfilename) as result:
             writer = csv.DictWriter(
                 result,
                 tuple(
@@ -305,8 +304,9 @@ class UserImportCommandTestCase(TestCase):
                 for col in cols_to_remove:
                     del row[col]
                 writer.writerow(row)
+
         FacilityUser.objects.all().delete()
-        call_command("importusers", self.csvpath)
+        call_command("importusers", "new" + self.csvfilename)
         for user in users:
             user_model = FacilityUser.objects.get(username=user["username"])
             self.assertEqual(user_model.birth_year, user["birth_year"])
@@ -316,15 +316,16 @@ class UserImportCommandTestCase(TestCase):
         for user in users:
             FacilityUser.objects.create(facility=self.facility, **user)
         call_command(
-            "exportusers", output_file=self.csvpath, overwrite=True, demographic=True
+            "exportusers",
+            output_file=self.csvfilename,
+            overwrite=True,
+            demographic=True,
         )
         cols_to_replace = {"Facility id": "facility", "Gender": "gender"}
-        csv_file = open_csv_for_reading(self.csvpath)
-        with csv_file as source:
+        with open_csv_for_reading(self.csvfilename) as source:
             reader = csv.DictReader(source)
             rows = [row for row in reader]
-        csv_file = open_csv_for_writing(self.csvpath)
-        with csv_file as result:
+        with open_csv_for_writing("new" + self.csvfilename) as result:
             writer = csv.DictWriter(
                 result,
                 tuple(
@@ -339,7 +340,7 @@ class UserImportCommandTestCase(TestCase):
                     del row[col]
                 writer.writerow(row)
         FacilityUser.objects.all().delete()
-        call_command("importusers", self.csvpath)
+        call_command("importusers", "new" + self.csvfilename)
         for user in users:
             user_model = FacilityUser.objects.get(username=user["username"])
             self.assertEqual(user_model.birth_year, user["birth_year"])

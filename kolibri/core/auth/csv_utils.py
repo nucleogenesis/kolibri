@@ -1,9 +1,9 @@
 import csv
 import logging
-import os
 from collections import OrderedDict
 from functools import partial
 
+from django.core.files.storage import default_storage
 from django.db.models import OuterRef
 from django.db.models import Q
 
@@ -160,7 +160,7 @@ db_columns = (
 
 
 def csv_file_generator(facility, filename, overwrite=True, demographic=False):
-    if not overwrite and os.path.exists(filename):
+    if not overwrite and default_storage.exists(filename):
         raise ValueError("{} already exists".format(filename))
     queryset = FacilityUser.objects.filter(facility=facility)
 
@@ -174,8 +174,6 @@ def csv_file_generator(facility, filename, overwrite=True, demographic=False):
         column for column in db_columns if demographic or column not in DEMO_FIELDS
     )
 
-    csv_file = open_csv_for_writing(filename)
-
     mappings = {}
 
     for key in output_mappings:
@@ -184,7 +182,7 @@ def csv_file_generator(facility, filename, overwrite=True, demographic=False):
 
     map_output = partial(output_mapper, labels=labels, output_mappings=mappings)
 
-    with csv_file as f:
+    with open_csv_for_writing(filename) as f:
         writer = csv.DictWriter(f, header_labels)
         logger.info("Creating csv file {filename}".format(filename=filename))
         writer.writeheader()

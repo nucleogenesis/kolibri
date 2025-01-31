@@ -10,6 +10,7 @@ import uuid
 
 import mock
 import pytz
+from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APITestCase
@@ -32,7 +33,7 @@ from kolibri.core.content.models import ContentNode
 from kolibri.core.logger.csv_export import labels
 from kolibri.core.logger.tasks import get_filepath
 from kolibri.core.logger.tasks import log_exports_cleanup
-from kolibri.utils import conf
+from kolibri.core.utils.csv import open_csv_for_reading
 from kolibri.utils.time_utils import local_now
 
 
@@ -63,7 +64,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
 
     def test_csv_download(self):
         expected_count = ContentSummaryLog.objects.count()
-        filepath = "{}.csv".format(uuid.uuid4())
+        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
         call_command(
             "exportlogs",
             log_type="summary",
@@ -72,7 +73,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open(filepath, "r", newline="") as f:
+        with open_csv_for_reading(filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -87,7 +88,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
         expected_count = ContentSummaryLog.objects.count()
         ContentNode.objects.all().delete()
         ChannelMetadata.objects.all().delete()
-        filepath = "{}.csv".format(uuid.uuid4())
+        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
         call_command(
             "exportlogs",
             log_type="summary",
@@ -96,7 +97,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open(filepath, "r", newline="") as f:
+        with open_csv_for_reading(filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -119,7 +120,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
             )
 
         expected_count = ContentSummaryLog.objects.count()
-        filepath = "{}.csv".format(uuid.uuid4())
+        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
         call_command(
             "exportlogs",
             log_type="summary",
@@ -128,7 +129,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open(filepath, "r", newline="") as f:
+        with open_csv_for_reading(filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -177,11 +178,11 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
         # latest should persist and the old one should be deleted
         log_exports_cleanup()
 
-        logs_dir = os.path.join(conf.KOLIBRI_HOME, "log_export")
-        # currently there are two file. logs export and users csv export
-        assert len(os.listdir(logs_dir)) == 2
-        assert os.path.basename(filepath_2) in os.listdir(logs_dir)
-        assert os.path.basename(filepath) not in os.listdir(logs_dir)
+        _, files_uploaded = default_storage.listdir("")
+
+        # logs export and users csv export
+        assert os.path.basename(filepath_2) in files_uploaded
+        assert os.path.basename(filepath) not in files_uploaded
 
         # make sure the csv file for the record saved in the database exists
         log_request = GenerateCSVLogRequest.objects.get(log_type=log_type)
@@ -195,8 +196,8 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
         expected_users_csv_file_path = USER_CSV_EXPORT_FILENAMES["user"].format(
             self.facility.name, self.facility.id[:4]
         )
-        assert os.path.basename(expected_file_path) in os.listdir(logs_dir)
-        assert expected_users_csv_file_path in os.listdir(logs_dir)
+        assert os.path.basename(expected_file_path) in files_uploaded
+        assert expected_users_csv_file_path in files_uploaded
         assert mock_enqueue.has_calls(2)
 
 
@@ -226,7 +227,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
 
     def test_csv_download(self):
         expected_count = ContentSessionLog.objects.count()
-        filepath = "{}.csv".format(uuid.uuid4())
+        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
         call_command(
             "exportlogs",
             log_type="session",
@@ -235,7 +236,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open(filepath, "r", newline="") as f:
+        with open_csv_for_reading(filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -250,7 +251,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         expected_count = ContentSessionLog.objects.count()
         ContentNode.objects.all().delete()
         ChannelMetadata.objects.all().delete()
-        filepath = "{}.csv".format(uuid.uuid4())
+        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
         call_command(
             "exportlogs",
             log_type="session",
@@ -259,7 +260,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open(filepath, "r", newline="") as f:
+        with open_csv_for_reading(filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -282,7 +283,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
             )
 
         expected_count = ContentSessionLog.objects.count()
-        filepath = "{}.csv".format(uuid.uuid4())
+        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
         call_command(
             "exportlogs",
             log_type="session",
@@ -291,7 +292,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open(filepath, "r", newline="") as f:
+        with open_csv_for_reading(filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -303,7 +304,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         )
 
     def test_csv_download_no_completion_timestamp(self):
-        filepath = "{}.csv".format(uuid.uuid4())
+        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
         call_command(
             "exportlogs",
             log_type="session",
@@ -312,7 +313,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open(filepath, "r", newline="") as f:
+        with open_csv_for_reading(filepath) as f:
             results = list(csv.reader(f))
         for column_label in results[0]:
             self.assertNotEqual(column_label, labels["completion_timestamp"])
@@ -360,11 +361,10 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         # latest csv should persist and the old one should be deleted
         log_exports_cleanup()
 
-        logs_dir = os.path.join(conf.KOLIBRI_HOME, "log_export")
+        _, files_uploaded = default_storage.listdir("")
         # currently there are two file. logs export and users csv export
-        assert len(os.listdir(logs_dir)) == 2
-        assert os.path.basename(filepath_2) in os.listdir(logs_dir)
-        assert os.path.basename(filepath) not in os.listdir(logs_dir)
+        assert os.path.basename(filepath_2) in files_uploaded
+        assert os.path.basename(filepath) not in files_uploaded
 
         # make sure the csv file for the record saved in the database exists
         log_request = GenerateCSVLogRequest.objects.get(log_type=log_type)
@@ -378,8 +378,8 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         expected_users_csv_file_path = USER_CSV_EXPORT_FILENAMES["user"].format(
             self.facility.name, self.facility.id[:4]
         )
-        assert os.path.basename(expected_file_path) in os.listdir(logs_dir)
-        assert expected_users_csv_file_path in os.listdir(logs_dir)
+        assert os.path.basename(expected_file_path) in files_uploaded
+        assert expected_users_csv_file_path in files_uploaded
         assert mock_enqueue.has_calls(2)
 
 

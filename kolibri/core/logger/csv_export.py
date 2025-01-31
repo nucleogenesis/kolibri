@@ -2,7 +2,6 @@ import csv
 import datetime
 import logging
 import math
-import os
 from collections import OrderedDict
 
 from dateutil import parser
@@ -11,6 +10,7 @@ from django.db.models import F
 from django.db.models import Max
 from django.db.models import OuterRef
 from django.db.models import Subquery
+from django.core.files.storage import default_storage
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
 from le_utils.constants import content_kinds
@@ -256,7 +256,7 @@ def csv_file_generator(
         else parser.parse(end_date) + datetime.timedelta(days=1)
     )
 
-    if not overwrite and os.path.exists(filepath):
+    if not overwrite and default_storage.exists(filepath):
         raise ValueError("{} already exists".format(filepath))
     queryset = log_info["queryset"].filter(
         dataset_id=facility.dataset_id,
@@ -285,9 +285,7 @@ def csv_file_generator(
         label for _, label in topic_headers
     ]
 
-    csv_file = open_csv_for_writing(filepath)
-
-    with csv_file as f:
+    with open_csv_for_writing(filepath) as f:
         writer = csv.DictWriter(f, header_labels)
         logger.info("Creating csv file {filename}".format(filename=filepath))
         writer.writeheader()

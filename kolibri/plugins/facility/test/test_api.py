@@ -28,13 +28,13 @@ def output_filename(log_type, facility, **kwargs):
     if log_type in ("summary", "session"):
         start_date = kwargs.get("start_date")
         end_date = kwargs.get("end_date")
-        return default_storage.get_available_name(
+        return default_storage.path(
             CSV_EXPORT_FILENAMES[log_type].format(
                 facility.name, facility.id[:4], start_date[:10], end_date[:10]
             )
         )
     else:
-        return default_storage.get_available_name(
+        return default_storage.path(
             CSV_EXPORT_FILENAMES[log_type].format(facility.name, facility.id[:4])
         )
 

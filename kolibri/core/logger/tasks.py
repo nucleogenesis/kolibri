@@ -1,5 +1,6 @@
 import os
 
+from django.core.files.storage import default_storage
 from django.core.management import call_command
 from rest_framework import serializers
 
@@ -12,18 +13,13 @@ from kolibri.core.logger.models import GenerateCSVLogRequest
 from kolibri.core.tasks.decorators import register_task
 from kolibri.core.tasks.permissions import IsAdminForJob
 from kolibri.core.tasks.validation import JobValidator
-from kolibri.utils import conf
 
 LOGS_CLEANUP_JOB_ID = "18"
 
 
 def get_filepath(log_type, facility_id, start_date, end_date):
     facility = Facility.objects.get(id=facility_id)
-    logs_dir = os.path.join(conf.KOLIBRI_HOME, "log_export")
-    if not os.path.isdir(logs_dir):
-        os.mkdir(logs_dir)
-    filepath = os.path.join(
-        logs_dir,
+    filepath = default_storage.path(
         CSV_EXPORT_FILENAMES[log_type].format(
             facility.name, facility.id[:4], start_date[:10], end_date[:10]
         ),
@@ -177,10 +173,8 @@ def log_exports_cleanup():
     Cleanup log_exports csv files that does not have
     related reocord in GenerateCSVLogRequest model
     """
-    logs_dir = os.path.join(conf.KOLIBRI_HOME, "log_export")
-    if not os.path.isdir(logs_dir):
-        return
     valid_filenames_set = get_valid_filenames()
-    for filename in os.listdir(logs_dir):
+    _, files_in_storage = default_storage.listdir("")
+    for filename in files_in_storage:
         if filename not in valid_filenames_set:
-            os.remove(os.path.join(logs_dir, filename))
+            default_storage.delete(filename)

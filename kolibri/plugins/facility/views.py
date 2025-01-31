@@ -1,9 +1,8 @@
-import io
 import json
-import os
 from datetime import datetime as dt
 
 from django.core.exceptions import PermissionDenied
+from django.core.files.storage import default_storage
 from django.http import Http404
 from django.http import HttpResponse
 from django.http.response import FileResponse
@@ -27,7 +26,6 @@ from kolibri.core.logger.csv_export import (
 )
 from kolibri.core.logger.models import ContentSessionLog
 from kolibri.core.logger.models import GenerateCSVLogRequest
-from kolibri.utils import conf
 
 
 CSV_EXPORT_FILENAMES = {}
@@ -97,7 +95,6 @@ def exported_csv_info(request, facility_id):
     """
     facility = _get_facility_check_permissions(request, facility_id)
 
-    logs_dir = os.path.join(conf.KOLIBRI_HOME, "log_export")
     csv_statuses = {}
 
     for log_type in CSV_EXPORT_FILENAMES:
@@ -109,19 +106,16 @@ def exported_csv_info(request, facility_id):
             else:
                 start = ""
                 end = ""
-            log_path = os.path.join(
-                logs_dir,
-                CSV_EXPORT_FILENAMES[log_type].format(
+                filename = CSV_EXPORT_FILENAMES[log_type].format(
                     facility.name, facility.id[:4], start[:10], end[:10]
-                ),
-            )
+                )
         else:
-            log_path = os.path.join(
-                logs_dir,
-                CSV_EXPORT_FILENAMES[log_type].format(facility.name, facility.id[:4]),
+            filename = CSV_EXPORT_FILENAMES[log_type].format(
+                facility.name, facility.id[:4]
             )
-        if os.path.exists(log_path):
-            csv_statuses[log_type] = os.path.getmtime(log_path)
+
+        if default_storage.exists(filename):
+            csv_statuses[log_type] = default_storage.get_modified_time(filename)
         else:
             csv_statuses[log_type] = None
 
@@ -189,32 +183,26 @@ def download_csv_file(request, csv_type, facility_id):
 
     if csv_type in CSV_EXPORT_FILENAMES.keys():
         if csv_type == "user":
-            filepath = os.path.join(
-                conf.KOLIBRI_HOME,
-                "log_export",
-                CSV_EXPORT_FILENAMES[csv_type].format(facility.name, facility.id[:4]),
+            filename = CSV_EXPORT_FILENAMES[csv_type].format(
+                facility.name, facility.id[:4]
             )
         else:
             log_request = _get_log_request(csv_type, facility_id)
             if log_request:
                 start = log_request.selected_start_date.isoformat()
                 end = log_request.selected_end_date.isoformat()
-            filepath = os.path.join(
-                conf.KOLIBRI_HOME,
-                "log_export",
-                CSV_EXPORT_FILENAMES[csv_type].format(
+                filename = CSV_EXPORT_FILENAMES[csv_type].format(
                     facility.name, facility.id[:4], start[:10], end[:10]
-                ),
-            )
+                )
     else:
-        filepath = None
+        filename = None
 
     # if the file does not exist on disk, return a 404
-    if filepath is None or not os.path.exists(filepath):
+    if filename is None or not default_storage.exists(filename):
         raise Http404("There is no csv export file for {} available".format(csv_type))
 
     # generate a file response
-    response = FileResponse(io.open(filepath, "rb"))
+    response = FileResponse(default_storage.open(filename, "rb"))
     # set the content-type by guessing from the filename
     response.headers["Content-Type"] = "text/csv"
 
@@ -234,6 +222,6 @@ def download_csv_file(request, csv_type, facility_id):
     translation.deactivate()
 
     # set the content-length to the file size
-    response.headers["Content-Length"] = os.path.getsize(filepath)
+    response.headers["Content-Length"] = default_storage.size(filename)
 
     return response
