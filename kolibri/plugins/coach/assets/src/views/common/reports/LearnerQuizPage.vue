@@ -73,7 +73,7 @@
     methods: {
       navigateTo(tryIndex, questionId, interactionIndex) {
         this.$router.push({
-          name: PageNames.QUIZ_LEARNER_REPORT,
+          name: PageNames.QUIZ_LEARNER_PAGE_ROOT,
           params: {
             classId: this.$route.params.classId,
             groupId: this.$route.params.groupId,
