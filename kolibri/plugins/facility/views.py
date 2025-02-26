@@ -115,7 +115,9 @@ def exported_csv_info(request, facility_id):
             )
 
         if default_storage.exists(filename):
-            csv_statuses[log_type] = default_storage.get_modified_time(filename)
+            csv_statuses[log_type] = default_storage.get_modified_time(
+                filename
+            ).isoformat()
         else:
             csv_statuses[log_type] = None
 
