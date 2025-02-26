@@ -195,12 +195,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 if not os.environ.get("DEFAULT_FILE_STORAGE"):
     if conf.OPTIONS["FileStorage"]["STORAGE_BACKEND"] == "gcs":
+        # Initialize GS_CREDENTIALS as a proper google.auth.credentials.Credentials object
+        import google.auth
+
+        GS_CREDENTIALS, _ = google.auth.default()
         # Options per https://django-storages.readthedocs.io/en/latest/backends/gcloud.html
         DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
         GS_BUCKET_NAME = conf.OPTIONS["FileStorage"]["GS_BUCKET_NAME"]
         GS_PROJECT_ID = conf.OPTIONS["FileStorage"]["GS_PROJECT_ID"]
-        GS_CREDENTIALS = conf.OPTIONS["FileStorage"]["GS_CREDENTIALS"]
-        GS_DEFAULT_ACL = conf.OPTIONS["FileStorage"]["GS_DEFAULT_ACL"]
+        GS_DEFAULT_ACL = conf.OPTIONS["FileStorage"]["GS_DEFAULT_ACL"] or "publicRead"
 
 
 # Internationalization
