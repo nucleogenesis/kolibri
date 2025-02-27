@@ -1,9 +1,12 @@
 import io
+import logging
 import re
 from contextlib import contextmanager
 from numbers import Number
 
 from django.core.files.storage import default_storage
+
+logger = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -17,6 +20,11 @@ def open_csv_for_writing(filename):
             yield encoded_fh
             encoded_fh.flush()
             default_storage.save(filename, f)
+            logger.info("CSV file {} updated".format(filename))
+            try:
+                logger.info("File path: {}".format(default_storage.path(filename)))
+            except NotImplementedError:
+                logger.info("File url: {}".format(default_storage.url(filename)))
     else:
         # If the file does not exist, we need to create it and return it wrapped in a TextIOWrapper
         with io.BytesIO() as f:
@@ -30,6 +38,11 @@ def open_csv_for_writing(filename):
             yield encoded_fh
             encoded_fh.flush()
             default_storage.save(filename, f)
+            logger.info("CSV file {} saved".format(filename))
+            try:
+                logger.info("File path: {}".format(default_storage.path(filename)))
+            except NotImplementedError:
+                logger.info("File url: {}".format(default_storage.url(filename)))
 
 
 @contextmanager

@@ -27,7 +27,6 @@ from kolibri.core.logger.csv_export import (
 from kolibri.core.logger.models import ContentSessionLog
 from kolibri.core.logger.models import GenerateCSVLogRequest
 
-
 CSV_EXPORT_FILENAMES = {}
 CSV_EXPORT_FILENAMES.update(LOGGER_CSV_EXPORT_FILENAMES)
 CSV_EXPORT_FILENAMES.update(USER_CSV_EXPORT_FILENAMES)
@@ -103,6 +102,9 @@ def exported_csv_info(request, facility_id):
             if log_request is not None:
                 start = log_request.selected_start_date.isoformat()
                 end = log_request.selected_end_date.isoformat()
+                filename = CSV_EXPORT_FILENAMES[log_type].format(
+                    facility.name, facility.id[:4], start[:10], end[:10]
+                )
             else:
                 start = ""
                 end = ""

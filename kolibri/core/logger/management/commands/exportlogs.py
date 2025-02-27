@@ -1,6 +1,5 @@
 import logging
 import ntpath
-import os
 
 from dateutil import parser
 from django.conf import settings
@@ -128,8 +127,6 @@ class Command(AsyncCommand):
             else:
                 filename = options["output_file"]
 
-            filepath = os.path.join(os.getcwd(), filename)
-
             queryset = log_info["queryset"]
 
             total_rows = queryset.count()
@@ -139,7 +136,7 @@ class Command(AsyncCommand):
                     for row in csv_file_generator(
                         facility,
                         log_type,
-                        filepath,
+                        filename,
                         start_date=start_date,
                         end_date=end_date,
                         overwrite=options["overwrite"],
@@ -150,14 +147,14 @@ class Command(AsyncCommand):
 
         if job:
             job.extra_metadata["overall_error"] = self.overall_error
-            self.job.extra_metadata["filename"] = ntpath.basename(filepath)
+            self.job.extra_metadata["filename"] = ntpath.basename(filename)
             job.save_meta()
         else:
             if self.overall_error:
                 raise CommandError(self.overall_error)
             else:
                 logger.info(
-                    "Created csv file {} with {} lines".format(filepath, total_rows)
+                    "Created csv file {} with {} lines".format(filename, total_rows)
                 )
 
         translation.deactivate()

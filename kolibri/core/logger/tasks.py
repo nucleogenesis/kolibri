@@ -1,5 +1,3 @@
-import os
-
 from django.core.files.storage import default_storage
 from django.core.management import call_command
 from rest_framework import serializers
@@ -19,10 +17,8 @@ LOGS_CLEANUP_JOB_ID = "18"
 
 def get_filepath(log_type, facility_id, start_date, end_date):
     facility = Facility.objects.get(id=facility_id)
-    filepath = default_storage.path(
-        CSV_EXPORT_FILENAMES[log_type].format(
-            facility.name, facility.id[:4], start_date[:10], end_date[:10]
-        ),
+    filepath = CSV_EXPORT_FILENAMES[log_type].format(
+        facility.name, facility.id[:4], start_date[:10], end_date[:10]
     )
     return filepath
 
@@ -42,7 +38,7 @@ def get_valid_logs_csv_filenames():
             log_request.selected_start_date.strftime("%Y-%m-%d"),
             log_request.selected_end_date.strftime("%Y-%m-%d"),
         )
-        valid_filenames_set.add(os.path.basename(full_path))
+        valid_filenames_set.add(full_path)
     return valid_filenames_set
 
 
