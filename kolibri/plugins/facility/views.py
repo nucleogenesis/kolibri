@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime as dt
 
 from django.core.exceptions import PermissionDenied
@@ -32,6 +33,8 @@ CSV_EXPORT_FILENAMES.update(LOGGER_CSV_EXPORT_FILENAMES)
 CSV_EXPORT_FILENAMES.update(USER_CSV_EXPORT_FILENAMES)
 
 content_kinds.QUIZ = "quiz"
+
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(cache_no_user_data, name="dispatch")
@@ -127,6 +130,7 @@ def exported_csv_info(request, facility_id):
 
 
 def download_csv_file(request, csv_type, facility_id):
+    logger.info("Downloading CSV file for facility {}".format(facility_id))
 
     facility = _get_facility_check_permissions(request, facility_id)
 
@@ -201,6 +205,8 @@ def download_csv_file(request, csv_type, facility_id):
     else:
         filename = None
 
+    logger.info("Downloading CSV file: {}".format(filename))
+    logger.info("{} exists: {}".format(filename, default_storage.exists(filename)))
     # if the file does not exist on disk, return a 404
     if filename is None or not default_storage.exists(filename):
         raise Http404("There is no csv export file for {} available".format(csv_type))
@@ -228,4 +234,5 @@ def download_csv_file(request, csv_type, facility_id):
     # set the content-length to the file size
     response.headers["Content-Length"] = default_storage.size(filename)
 
+    logger.info("Downloaded CSV file and responding")
     return response
