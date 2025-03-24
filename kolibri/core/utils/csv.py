@@ -11,38 +11,23 @@ logger = logging.getLogger(__name__)
 
 @contextmanager
 def open_csv_for_writing(filename):
-    if default_storage.exists(filename):
-        # If the file exists, we need to open it and return it wrapped in a TextIOWrapper
-        with default_storage.open(filename, "rb+") as f:
-            encoded_fh = io.TextIOWrapper(
-                f, newline="", encoding="utf-8-sig", write_through=True
-            )
-            yield encoded_fh
-            encoded_fh.flush()
-            default_storage.save(filename, f)
-            logger.info("CSV file {} updated".format(filename))
-            try:
-                logger.info("File path: {}".format(default_storage.path(filename)))
-            except NotImplementedError:
-                logger.info("File url: {}".format(default_storage.url(filename)))
-    else:
-        # If the file does not exist, we need to create it and return it wrapped in a TextIOWrapper
-        with io.BytesIO() as f:
-            encoded_fh = io.TextIOWrapper(
-                f,
-                newline="",
-                encoding="utf-8-sig",
-                write_through=True,
-                line_buffering=True,
-            )
-            yield encoded_fh
-            encoded_fh.flush()
-            default_storage.save(filename, f)
-            logger.info("CSV file {} saved".format(filename))
-            try:
-                logger.info("File path: {}".format(default_storage.path(filename)))
-            except NotImplementedError:
-                logger.info("File url: {}".format(default_storage.url(filename)))
+    # If the file does not exist, we need to create it and return it wrapped in a TextIOWrapper
+    with io.BytesIO() as f:
+        encoded_fh = io.TextIOWrapper(
+            f,
+            newline="",
+            encoding="utf-8-sig",
+            write_through=True,
+            line_buffering=True,
+        )
+        yield encoded_fh
+        encoded_fh.flush()
+        default_storage.save(filename, f)
+        logger.info("CSV file {} saved".format(filename))
+        try:
+            logger.info("File path: {}".format(default_storage.path(filename)))
+        except NotImplementedError:
+            logger.info("File url: {}".format(default_storage.url(filename)))
 
 
 @contextmanager
