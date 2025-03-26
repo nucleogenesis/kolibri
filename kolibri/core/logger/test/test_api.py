@@ -178,7 +178,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
         # latest should persist and the old one should be deleted
         log_exports_cleanup()
 
-        _, files_uploaded = default_storage.listdir("")
+        _, files_uploaded = default_storage.listdir("log_export/")
 
         # logs export and users csv export
         assert os.path.basename(filepath_2) in files_uploaded
@@ -197,7 +197,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
             self.facility.name, self.facility.id[:4]
         )
         assert os.path.basename(expected_file_path) in files_uploaded
-        assert expected_users_csv_file_path in files_uploaded
+        assert os.path.basename(expected_users_csv_file_path) in files_uploaded
         assert mock_enqueue.has_calls(2)
 
 
@@ -361,7 +361,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         # latest csv should persist and the old one should be deleted
         log_exports_cleanup()
 
-        _, files_uploaded = default_storage.listdir("")
+        _, files_uploaded = default_storage.listdir("log_export/")
         # currently there are two file. logs export and users csv export
         assert os.path.basename(filepath_2) in files_uploaded
         assert os.path.basename(filepath) not in files_uploaded
@@ -379,7 +379,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
             self.facility.name, self.facility.id[:4]
         )
         assert os.path.basename(expected_file_path) in files_uploaded
-        assert expected_users_csv_file_path in files_uploaded
+        assert os.path.basename(expected_users_csv_file_path) in files_uploaded
         assert mock_enqueue.has_calls(2)
 
 

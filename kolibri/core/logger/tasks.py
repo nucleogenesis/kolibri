@@ -167,10 +167,12 @@ def exportsummarylogcsv(facility_id, **kwargs):
 def log_exports_cleanup():
     """
     Cleanup log_exports csv files that does not have
-    related reocord in GenerateCSVLogRequest model
+    related record in GenerateCSVLogRequest model
     """
     valid_filenames_set = get_valid_filenames()
-    _, files_in_storage = default_storage.listdir("")
-    for filename in files_in_storage:
+    _, files_in_storage = default_storage.listdir("log_export/")
+    # Prefix the filenames with the directory name because that's what we'll
+    # get from get_valid_filenames
+    for filename in ["log_export/{}".format(filename) for filename in files_in_storage]:
         if filename not in valid_filenames_set:
             default_storage.delete(filename)
