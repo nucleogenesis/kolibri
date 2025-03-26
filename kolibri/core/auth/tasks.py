@@ -4,6 +4,7 @@ import ntpath
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
@@ -175,15 +176,25 @@ def importusersfromcsv(
     :returns: An object with the job information
     """
 
-    call_command(
-        "bulkimportusers",
-        filepath,
-        facility=facility,
-        userid=userid,
-        locale=locale,
-        dryrun=dryrun,
-        delete=delete,
-    )
+    try:
+        call_command(
+            "bulkimportusers",
+            filepath,
+            facility=facility,
+            userid=userid,
+            locale=locale,
+            dryrun=dryrun,
+            delete=delete,
+        )
+    except (CommandError, serializers.ValidationError):
+        # There was an error in the command so we need to delete the file since they
+        # need to fix and re-upload.
+        default_storage.delete(filepath)
+        raise
+
+    if not dryrun and default_storage.exists(filepath):
+        # We remove the file on a wetrun, since it is no longer needed
+        default_storage.delete(filepath)
 
 
 class ExportUsersToCSVValidator(JobValidator):
