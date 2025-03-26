@@ -6,11 +6,11 @@ from collections import OrderedDict
 
 from dateutil import parser
 from django.core.cache import cache
+from django.core.files.storage import default_storage
 from django.db.models import F
 from django.db.models import Max
 from django.db.models import OuterRef
 from django.db.models import Subquery
-from django.core.files.storage import default_storage
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
 from le_utils.constants import content_kinds
@@ -26,8 +26,8 @@ from kolibri.core.utils.csv import output_mapper
 logger = logging.getLogger(__name__)
 
 CSV_EXPORT_FILENAMES = {
-    "session": "{}_{}_content_session_logs_from_{}_to_{}.csv",
-    "summary": "{}_{}_content_summary_logs_from_{}_to_{}.csv",
+    "session": "log_export/{}_{}_content_session_logs_from_{}_to_{}.csv",
+    "summary": "log_export/{}_{}_content_summary_logs_from_{}_to_{}.csv",
 }
 
 CACHE_TIMEOUT = 60 * 10

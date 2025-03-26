@@ -35,7 +35,7 @@ except NameError:
 
 logger = logging.getLogger(__name__)
 
-CSV_EXPORT_FILENAMES = {"user": "{}_{}_users.csv"}
+CSV_EXPORT_FILENAMES = {"user": "log_export/{}_{}_users.csv"}
 
 
 # TODO: decide whether these should be internationalized

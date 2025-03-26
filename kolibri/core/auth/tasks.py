@@ -135,9 +135,9 @@ class ImportUsersFromCSVValidator(JobValidator):
         if "csvfile" in data:
             tmp_path = data["csvfile"].temporary_file_path()
             filename = ntpath.basename(tmp_path)
-            filepath = default_storage.save(filename, data["csvfile"])
+            filepath = default_storage.save("temp/{}".format(filename), data["csvfile"])
         else:
-            filepath = data["csvfilename"]
+            filepath = "temp/{}".format(data["csvfilename"])
             if not default_storage.exists(filepath):
                 raise serializers.ValidationError("Supplied csvfilename does not exist")
 
