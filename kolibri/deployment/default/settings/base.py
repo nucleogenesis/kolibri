@@ -190,17 +190,6 @@ elif conf.OPTIONS["Database"]["DATABASE_ENGINE"] == "postgres":
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
-# File Storage Backend
-# https://docs.djangoproject.com/en/3.2/ref/files/storage/
-
-if not os.environ.get("DEFAULT_FILE_STORAGE"):
-    if conf.OPTIONS["FileStorage"]["STORAGE_BACKEND"] == "gcs":
-        # Options per https://django-storages.readthedocs.io/en/latest/backends/gcloud.html
-        DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-        GS_BUCKET_NAME = conf.OPTIONS["FileStorage"]["GS_BUCKET_NAME"]
-        GS_PROJECT_ID = conf.OPTIONS["FileStorage"]["GS_PROJECT_ID"]
-        GS_DEFAULT_ACL = conf.OPTIONS["FileStorage"]["GS_DEFAULT_ACL"] or "publicRead"
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
