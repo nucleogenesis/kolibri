@@ -109,16 +109,13 @@ class KolibriCoreConfig(AppConfig):
         Check that the file storage settings are sensible.
         https://docs.djangoproject.com/en/3.2/ref/files/storage/
         """
+        # TODO This should be a bonus sanity check
         # Options per https://django-storages.readthedocs.io/en/latest/backends/gcloud.html
         if OPTIONS["FileStorage"]["STORAGE_BACKEND"] == "gcs":
-            settings.DEFAULT_FILE_STORAGE = (
-                "storages.backends.gcloud.GoogleCloudStorage"
-            )
-            settings.GS_BUCKET_NAME = OPTIONS["FileStorage"]["GS_BUCKET_NAME"]
-            settings.GS_PROJECT_ID = OPTIONS["FileStorage"]["GS_PROJECT_ID"]
-            settings.GS_DEFAULT_ACL = (
-                OPTIONS["FileStorage"]["GS_DEFAULT_ACL"] or "publicRead"
-            )
+            # Actually imoprt default_storage and run listdir
+            from django.core.files.storage import default_storage
+
+            default_storage.get_available_name("kolibri")
 
     @staticmethod  # noqa C901
     def check_redis_settings():  # noqa C901
