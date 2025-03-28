@@ -1,10 +1,10 @@
 import csv
 import logging
+import os
 from collections import OrderedDict
 from functools import partial
 
 from django.conf import settings
-from django.core.files.storage import default_storage
 from django.core.management.base import CommandError
 from django.db.models import OuterRef
 from django.db.models import Subquery
@@ -27,6 +27,7 @@ from kolibri.core.tasks.management.commands.base import AsyncCommand
 from kolibri.core.tasks.utils import get_current_job
 from kolibri.core.utils.csv import open_csv_for_writing
 from kolibri.core.utils.csv import output_mapper
+from kolibri.core.utils.csv import validate_open_csv_params
 
 try:
     FileNotFoundError
@@ -150,16 +151,22 @@ def translate_labels():
     )
 
 
-def csv_file_generator(facility, filename, overwrite=True):
-    if not overwrite and default_storage.exists(filename):
-        raise ValueError("{} already exists".format(filename))
+def csv_file_generator(
+    facility, storage_filepath=None, local_filepath=None, overwrite=True
+):
+    validate_open_csv_params(storage_filepath, local_filepath)
+
+    if local_filepath and not overwrite and os.path.exists(local_filepath):
+        raise ValueError("{} already exists".format(local_filepath))
+
     queryset = FacilityUser.objects.filter(facility=facility)
 
     header_labels = translate_labels().values()
 
-    with open_csv_for_writing(filename) as f:
+    with open_csv_for_writing(
+        storage_filepath=storage_filepath, local_filepath=local_filepath
+    ) as f:
         writer = csv.DictWriter(f, header_labels)
-        logger.info("Creating csv file {filename}".format(filename=filename))
         writer.writeheader()
         usernames = set()
 
@@ -209,7 +216,15 @@ class Command(AsyncCommand):
             dest="output_file",
             default=None,
             type=str,
-            help="The generated file will be saved with this name",
+            help="The generated file will be saved with this name in the current directory",
+        )
+        parser.add_argument(
+            "-s",
+            "--use-django-storage",
+            action="store_true",
+            dest="use_storage",
+            default=False,
+            help="The generated file will be read/written using Django FileStorage",
         )
         parser.add_argument(
             "--facility",
@@ -244,30 +259,45 @@ class Command(AsyncCommand):
 
         return default_facility
 
-    def get_filename(self, options, facility):
-        if options["output_file"] is None:
-            filename = default_storage.get_available_name(
-                CSV_EXPORT_FILENAMES["user"].format(facility.name, facility.id[:4])
-            )
-        else:
-            filename = options["output_file"]
-        return filename
-
     def handle_async(self, *args, **options):
+
+        storage_filepath = None
+        local_filepath = None
+
+        use_storage = options["use_storage"]
+        output_file = options["output_file"]
+
+        if use_storage and output_file:
+            raise CommandError(
+                "You must provide either a storage path or a local file path"
+            )
+
         # set language for the translation of the messages
         locale = settings.LANGUAGE_CODE if not options["locale"] else options["locale"]
         translation.activate(locale)
 
         self.overall_error = []
         facility = self.get_facility(options)
-        filename = self.get_filename(options, facility)
+        filename = CSV_EXPORT_FILENAMES["user"].format(facility.name, facility.id[:4])
+
+        if use_storage:
+            storage_filepath = filename
+        else:
+            local_filepath = (
+                output_file if output_file else filename.replace("log_export/", "")
+            )
+            local_filepath = os.path.join(os.getcwd(), local_filepath)
+
         job = get_current_job()
         total_rows = FacilityUser.objects.filter(facility=facility).count()
 
         with self.start_progress(total=total_rows) as progress_update:
             try:
                 for row in csv_file_generator(
-                    facility, filename, overwrite=options["overwrite"]
+                    facility,
+                    storage_filepath=storage_filepath,
+                    local_filepath=local_filepath,
+                    overwrite=options["overwrite"],
                 ):
                     progress_update(1)
             except (ValueError, IOError) as e:
