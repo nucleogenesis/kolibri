@@ -1,5 +1,6 @@
 import logging
 import ntpath
+import os
 
 from dateutil import parser
 from django.conf import settings
@@ -41,6 +42,14 @@ class Command(AsyncCommand):
             default="session",
             choices=classes_info.keys(),
             help='Log type to be exported. Valid values are "session" and "summary".',
+        )
+        parser.add_argument(
+            "-s",
+            "--use-django-storage",
+            action="store_true",
+            dest="use_storage",
+            default=False,
+            help="The generated file will be read/written using Django FileStorage",
         )
         parser.add_argument(
             "-w",
@@ -105,6 +114,14 @@ class Command(AsyncCommand):
         start_date = options["start_date"]
         end_date = options["end_date"]
 
+        use_storage = options["use_storage"]
+        output_file = options["output_file"]
+
+        if use_storage and output_file:
+            raise CommandError(
+                "You must provide either a storage path or a local file path"
+            )
+
         facility = self.get_facility(options)
         if not facility:
             self.overall_error = str(MESSAGES[NO_FACILITY])
@@ -127,6 +144,17 @@ class Command(AsyncCommand):
             else:
                 filename = options["output_file"]
 
+            storage_filepath = None
+            local_filepath = None
+
+            if use_storage:
+                storage_filepath = filename
+            else:
+                local_filepath = (
+                    output_file if output_file else filename.replace("log_export/", "")
+                )
+                local_filepath = os.path.join(os.getcwd(), local_filepath)
+
             queryset = log_info["queryset"]
 
             total_rows = queryset.count()
@@ -136,7 +164,8 @@ class Command(AsyncCommand):
                     for row in csv_file_generator(
                         facility,
                         log_type,
-                        filename,
+                        storage_filepath=storage_filepath,
+                        local_filepath=local_filepath,
                         start_date=start_date,
                         end_date=end_date,
                         overwrite=options["overwrite"],

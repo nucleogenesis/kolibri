@@ -1,9 +1,9 @@
 import csv
 import logging
+import os
 from collections import OrderedDict
 from functools import partial
 
-from django.core.files.storage import default_storage
 from django.db.models import OuterRef
 from django.db.models import Q
 
@@ -16,6 +16,7 @@ from kolibri.core.auth.models import FacilityUser
 from kolibri.core.query import SQCount
 from kolibri.core.utils.csv import open_csv_for_writing
 from kolibri.core.utils.csv import output_mapper
+from kolibri.core.utils.csv import validate_open_csv_params
 
 
 logger = logging.getLogger(__name__)
@@ -159,9 +160,18 @@ db_columns = (
 )
 
 
-def csv_file_generator(facility, filename, overwrite=True, demographic=False):
-    if not overwrite and default_storage.exists(filename):
-        raise ValueError("{} already exists".format(filename))
+def csv_file_generator(
+    facility,
+    local_filepath=None,
+    storage_filepath=None,
+    overwrite=True,
+    demographic=False,
+):
+    validate_open_csv_params(storage_filepath, local_filepath)
+
+    if local_filepath and not overwrite and os.path.exists(local_filepath):
+        raise ValueError("{} already exists".format(local_filepath))
+
     queryset = FacilityUser.objects.filter(facility=facility)
 
     header_labels = tuple(
@@ -182,9 +192,10 @@ def csv_file_generator(facility, filename, overwrite=True, demographic=False):
 
     map_output = partial(output_mapper, labels=labels, output_mappings=mappings)
 
-    with open_csv_for_writing(filename) as f:
+    with open_csv_for_writing(
+        storage_filepath=storage_filepath, local_filepath=local_filepath
+    ) as f:
         writer = csv.DictWriter(f, header_labels)
-        logger.info("Creating csv file {filename}".format(filename=filename))
         writer.writeheader()
         usernames = set()
         for item in (

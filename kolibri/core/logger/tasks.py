@@ -110,16 +110,15 @@ class ExportLogCSVValidator(JobValidator):
 
 
 def _exportlogcsv(log_type, facility_id, start_date, end_date, locale):
-    filepath = get_filepath(log_type, facility_id, start_date, end_date)
     call_command(
         "exportlogs",
         log_type=log_type,
-        output_file=filepath,
         facility=facility_id,
         overwrite=True,
         start_date=start_date,
         end_date=end_date,
         locale=locale,
+        use_storage=True,
     )
 
 
