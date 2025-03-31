@@ -180,6 +180,7 @@ def importusersfromcsv(
         call_command(
             "bulkimportusers",
             filepath,
+            use_storage=True,
             facility=facility,
             userid=userid,
             locale=locale,
@@ -232,6 +233,7 @@ def exportuserstocsv(facility=None, locale=None):
 
     call_command(
         "bulkexportusers",
+        use_storage=True,
         facility=facility,
         locale=locale,
         overwrite="true",

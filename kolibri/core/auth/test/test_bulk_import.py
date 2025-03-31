@@ -1,4 +1,5 @@
 import csv
+import tempfile
 from io import StringIO
 from uuid import uuid4
 
@@ -103,7 +104,7 @@ class ImportTestCase(TestCase):
         )
         self.facility = self.data["facility"]
 
-        self.filename = "temp.csv"
+        _, self.filename = tempfile.mkstemp(suffix=".csv")
 
         call_command(
             "bulkexportusers",
@@ -118,7 +119,7 @@ class ImportTestCase(TestCase):
     def create_csv(self, filename, rows, remove_uuid=False):
         header_labels = list(labels.values())
 
-        with open_csv_for_writing(filename) as f:
+        with open_csv_for_writing(local_filepath=filename) as f:
             writer = csv.writer(f)
             writer.writerow(header_labels)
             for item in rows:
@@ -129,9 +130,9 @@ class ImportTestCase(TestCase):
     def import_exported_csv(self):
         # Replace asterisk in passwords to be able to import it
         # Remove UUID so new users are created
-        new_filename = "import_exported_csv_" + self.filename
+        _, new_filename = tempfile.mkstemp(suffix=".csv")
         rows = []
-        with open_csv_for_reading(self.filename) as source:
+        with open_csv_for_reading(local_filepath=self.filename) as source:
             reader = csv.reader(source, strict=True)
             for row in reader:
                 row[0] = None
@@ -147,14 +148,14 @@ class ImportTestCase(TestCase):
             assert len(classroom.get_coaches()) == 1
 
     def test_dryrun_from_export_csv(self):
-        with open_csv_for_reading(self.filename) as source:
+        with open_csv_for_reading(local_filepath=self.filename) as source:
             header = next(csv.reader(source, strict=True))
         header_translation = {
             lbl.partition("(")[2].partition(")")[0]: lbl for lbl in header
         }
         cmd = b.Command()
 
-        with open_csv_for_reading(self.filename) as source:
+        with open_csv_for_reading(local_filepath=self.filename) as source:
             reader = csv.DictReader(source, strict=True)
             per_line_errors, classes, users, roles = cmd.csv_values_validation(
                 reader, header_translation, self.facility
@@ -176,7 +177,7 @@ class ImportTestCase(TestCase):
         assert assigned_classes["classroom1"] == ["classcoach1"]
 
     def test_password_is_required(self):
-        new_filename = "test_password_is_required_" + self.filename
+        _, new_filename = tempfile.mkstemp(suffix=".csv")
         rows = [
             [
                 None,
@@ -217,14 +218,14 @@ class ImportTestCase(TestCase):
         ]
         self.create_csv(new_filename, rows)
 
-        with open_csv_for_reading(new_filename) as source:
+        with open_csv_for_reading(local_filepath=new_filename) as source:
             header = next(csv.reader(source, strict=True))
         header_translation = {
             lbl.partition("(")[2].partition(")")[0]: lbl for lbl in header
         }
         cmd = b.Command()
 
-        with open_csv_for_reading(new_filename) as source:
+        with open_csv_for_reading(local_filepath=new_filename) as source:
             reader = csv.DictReader(source, strict=True)
             per_line_errors, classes, users, roles = cmd.csv_values_validation(
                 reader, header_translation, self.facility
@@ -248,7 +249,7 @@ class ImportTestCase(TestCase):
         assert "'row': 2" in result[1]
 
     def test_case_insensitive_usernames(self):
-        first_filename = "case_insensitive_usernames_" + self.filename
+        _, first_filename = tempfile.mkstemp(suffix=".csv")
         rows = [
             [
                 None,
@@ -285,7 +286,7 @@ class ImportTestCase(TestCase):
         assert users.count() == 1
 
     def test_username_already_exists(self):
-        first_filename = "username_exists_1_" + self.filename
+        _, first_filename = tempfile.mkstemp(suffix=".csv")
         rows = [
             [
                 None,
@@ -312,7 +313,7 @@ class ImportTestCase(TestCase):
         assert initial_peter_count == 1
 
         # Attempt to add another user with the same username "peter"
-        second_filename = "username_exists_2_" + self.filename
+        _, second_filename = tempfile.mkstemp(suffix=".csv")
         rows = [
             [
                 None,
@@ -340,7 +341,7 @@ class ImportTestCase(TestCase):
         assert passwd2 == passwd1
 
     def test_username_already_exists_on_different_facility(self):
-        first_filename = "username_exists_first_" + self.filename
+        _, first_filename = tempfile.mkstemp(suffix=".csv")
         rows = [
             [
                 None,
@@ -378,7 +379,7 @@ class ImportTestCase(TestCase):
         ).exists()
 
     def test_asterisk_in_password(self):
-        first_filename = "asterisk_in_password_1_" + self.filename
+        _, first_filename = tempfile.mkstemp(suffix=".csv")
         rows = [
             [
                 None,
@@ -415,7 +416,7 @@ class ImportTestCase(TestCase):
         uid2 = user2.id
 
         # let's edit the users with a new import
-        second_filename = "asterisk_in_password_2_" + self.filename
+        _, second_filename = tempfile.mkstemp(suffix=".csv")
         rows = [
             [
                 uid1,
@@ -452,7 +453,7 @@ class ImportTestCase(TestCase):
         self.import_exported_csv()
 
         # new csv to import and clear classes and delete non-admin users:
-        new_filename = "delete_users_and_classes_" + self.filename
+        _, new_filename = tempfile.mkstemp(suffix=".csv")
         rows = [
             [
                 None,
@@ -517,7 +518,7 @@ class ImportTestCase(TestCase):
         self.import_exported_csv()
         old_users = FacilityUser.objects.count()
         # new csv to import and update classes, adding users and keeping previous not been in the csv:
-        new_filename = "add_users_and_classes_" + self.filename
+        _, new_filename = tempfile.mkstemp(suffix=".csv")
         rows = [
             [
                 None,
@@ -565,7 +566,7 @@ class ImportTestCase(TestCase):
         assert new_coach.gender == demographics.MALE
 
     def test_classes_names_case_insensitive(self):
-        new_filename = "class_names_case_insensitive_" + self.filename
+        _, new_filename = tempfile.mkstemp(suffix=".csv")
         # first inside the same csv file
         rows = [
             [
@@ -612,17 +613,17 @@ class ImportTestCase(TestCase):
                 "Another CLASS ",
             ]
         ]
-        self.create_csv("new_" + new_filename, rows)
-        new_new_filename = "new_" + new_filename
+        _, new_new_filename = tempfile.mkstemp(suffix=".csv")
+        self.create_csv(new_new_filename, rows)
         call_command("bulkimportusers", new_new_filename, facility=self.facility.id)
         classrooms = Classroom.objects.all()
         assert len(classrooms) == 4
 
     def test_non_existing_uuid(self):
         self.import_exported_csv()
-        new_filename = "new_" + self.filename
+        _, new_filename = tempfile.mkstemp(suffix=".csv")
         rows = []
-        with open_csv_for_reading(self.filename) as source:
+        with open_csv_for_reading(local_filepath=self.filename) as source:
             reader = csv.reader(source, strict=True)
             for row in reader:
                 row[0] = uuid4()
