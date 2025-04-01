@@ -8,7 +8,6 @@ import uuid
 
 import mock
 import pytz
-from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.urls import reverse
 from rest_framework.test import APITestCase
@@ -20,23 +19,7 @@ from kolibri.core.logger.tasks import log_exports_cleanup
 from kolibri.core.logger.test.factory_logger import ContentSessionLogFactory
 from kolibri.core.logger.test.factory_logger import ContentSummaryLogFactory
 from kolibri.core.logger.test.factory_logger import FacilityUserFactory
-from kolibri.plugins.facility.views import CSV_EXPORT_FILENAMES
 from kolibri.utils.time_utils import utc_now
-
-
-def output_filename(log_type, facility, **kwargs):
-    if log_type in ("summary", "session"):
-        start_date = kwargs.get("start_date")
-        end_date = kwargs.get("end_date")
-        return default_storage.path(
-            CSV_EXPORT_FILENAMES[log_type].format(
-                facility.name, facility.id[:4], start_date[:10], end_date[:10]
-            )
-        )
-    else:
-        return default_storage.path(
-            CSV_EXPORT_FILENAMES[log_type].format(facility.name, facility.id[:4])
-        )
 
 
 class ContentSummaryLogCSVExportTestCase(APITestCase):
@@ -67,12 +50,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
         call_command(
             "exportlogs",
             log_type="summary",
-            output_file=output_filename(
-                "summary",
-                self.facility,
-                start_date=self.start_date,
-                end_date=self.end_date,
-            ),
+            use_storage=True,
             overwrite=True,
             start_date=self.start_date,
             end_date=self.end_date,
@@ -90,12 +68,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
         call_command(
             "exportlogs",
             log_type="summary",
-            output_file=output_filename(
-                "summary",
-                self.facility,
-                start_date=self.start_date,
-                end_date=self.end_date,
-            ),
+            use_storage=True,
             overwrite=True,
             start_date=self.start_date,
             end_date=self.end_date,
@@ -117,13 +90,8 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
     def test_csv_download_admin_permissions(self, mock_enqueue):
         call_command(
             "exportlogs",
+            use_storage=True,
             log_type="summary",
-            output_file=output_filename(
-                "summary",
-                self.facility,
-                start_date=self.start_date,
-                end_date=self.end_date,
-            ),
             overwrite=True,
             start_date=self.start_date,
             end_date=self.end_date,
@@ -170,12 +138,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         call_command(
             "exportlogs",
             log_type="session",
-            output_file=output_filename(
-                "session",
-                self.facility,
-                start_date=self.start_date,
-                end_date=self.end_date,
-            ),
+            use_storage=True,
             overwrite=True,
             start_date=self.start_date,
             end_date=self.end_date,
@@ -192,13 +155,8 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
     def test_csv_download_non_admin_permissions(self, mock_enqueue):
         call_command(
             "exportlogs",
+            use_storage=True,
             log_type="session",
-            output_file=output_filename(
-                "session",
-                self.facility,
-                start_date=self.start_date,
-                end_date=self.end_date,
-            ),
             overwrite=True,
             start_date=self.start_date,
             end_date=self.end_date,
@@ -220,13 +178,8 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
     def test_csv_download_admin_permissions(self, mock_enqueue):
         call_command(
             "exportlogs",
+            use_storage=True,
             log_type="session",
-            output_file=output_filename(
-                "session",
-                self.facility,
-                start_date=self.start_date,
-                end_date=self.end_date,
-            ),
             overwrite=True,
             start_date=self.start_date,
             end_date=self.end_date,
@@ -261,7 +214,7 @@ class UserCSVExportTestCase(APITestCase):
     def test_csv_download_anonymous_permissions(self):
         call_command(
             "bulkexportusers",
-            output_file=output_filename("user", self.facility),
+            use_storage=True,
             overwrite=True,
         )
         response = self.client.get(
@@ -275,7 +228,7 @@ class UserCSVExportTestCase(APITestCase):
     def test_csv_download_non_admin_permissions(self):
         call_command(
             "bulkexportusers",
-            output_file=output_filename("user", self.facility),
+            use_storage=True,
             overwrite=True,
         )
         self.client.login(
@@ -294,7 +247,7 @@ class UserCSVExportTestCase(APITestCase):
     def test_csv_download_admin_permissions(self):
         call_command(
             "bulkexportusers",
-            output_file=output_filename("user", self.facility),
+            use_storage=True,
             overwrite=True,
         )
         self.client.login(

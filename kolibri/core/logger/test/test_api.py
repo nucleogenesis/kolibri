@@ -6,6 +6,7 @@ Also tests whether the users with permissions can create logs.
 import csv
 import datetime
 import os
+import tempfile
 import uuid
 
 import mock
@@ -64,16 +65,16 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
 
     def test_csv_download(self):
         expected_count = ContentSummaryLog.objects.count()
-        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
+        _, filepath = tempfile.mkstemp(suffix=".csv")
         call_command(
             "exportlogs",
-            log_type="summary",
             output_file=filepath,
+            log_type="summary",
             overwrite=True,
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open_csv_for_reading(filepath) as f:
+        with open_csv_for_reading(local_filepath=filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -88,7 +89,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
         expected_count = ContentSummaryLog.objects.count()
         ContentNode.objects.all().delete()
         ChannelMetadata.objects.all().delete()
-        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
+        _, filepath = tempfile.mkstemp(suffix=".csv")
         call_command(
             "exportlogs",
             log_type="summary",
@@ -97,7 +98,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open_csv_for_reading(filepath) as f:
+        with open_csv_for_reading(local_filepath=filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -120,7 +121,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
             )
 
         expected_count = ContentSummaryLog.objects.count()
-        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
+        _, filepath = tempfile.mkstemp(suffix=".csv")
         call_command(
             "exportlogs",
             log_type="summary",
@@ -129,7 +130,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open_csv_for_reading(filepath) as f:
+        with open_csv_for_reading(local_filepath=filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -150,7 +151,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
         call_command(
             "exportlogs",
             log_type=log_type,
-            output_file=filepath,
+            use_storage=True,
             overwrite=True,
             start_date=start_date,
             end_date=end_date,
@@ -163,7 +164,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
         call_command(
             "exportlogs",
             log_type=log_type,
-            output_file=filepath_2,
+            use_storage=True,
             overwrite=True,
             start_date=start_date_2,
             end_date=end_date_2,
@@ -172,6 +173,7 @@ class ContentSummaryLogCSVExportTestCase(APITestCase):
         call_command(
             "bulkexportusers",
             facility=self.facility.id,
+            use_storage=True,
             overwrite=True,
         )
         # execute cleanup
@@ -227,7 +229,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
 
     def test_csv_download(self):
         expected_count = ContentSessionLog.objects.count()
-        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
+        _, filepath = tempfile.mkstemp(suffix=".csv")
         call_command(
             "exportlogs",
             log_type="session",
@@ -236,7 +238,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open_csv_for_reading(filepath) as f:
+        with open_csv_for_reading(local_filepath=filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -251,7 +253,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         expected_count = ContentSessionLog.objects.count()
         ContentNode.objects.all().delete()
         ChannelMetadata.objects.all().delete()
-        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
+        _, filepath = tempfile.mkstemp(suffix=".csv")
         call_command(
             "exportlogs",
             log_type="session",
@@ -260,7 +262,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open_csv_for_reading(filepath) as f:
+        with open_csv_for_reading(local_filepath=filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -283,7 +285,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
             )
 
         expected_count = ContentSessionLog.objects.count()
-        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
+        _, filepath = tempfile.mkstemp(suffix=".csv")
         call_command(
             "exportlogs",
             log_type="session",
@@ -292,7 +294,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open_csv_for_reading(filepath) as f:
+        with open_csv_for_reading(local_filepath=filepath) as f:
             results = list(csv.reader(f))
         for row in results[1:]:
             self.assertEqual(len(results[0]), len(row))
@@ -304,16 +306,16 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         )
 
     def test_csv_download_no_completion_timestamp(self):
-        filepath = default_storage.path("{}.csv".format(uuid.uuid4()))
+        _, filepath = tempfile.mkstemp(suffix=".csv")
         call_command(
             "exportlogs",
             log_type="session",
-            output_file=filepath,
             overwrite=True,
+            output_file=filepath,
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        with open_csv_for_reading(filepath) as f:
+        with open_csv_for_reading(local_filepath=filepath) as f:
             results = list(csv.reader(f))
         for column_label in results[0]:
             self.assertNotEqual(column_label, labels["completion_timestamp"])
@@ -333,7 +335,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         call_command(
             "exportlogs",
             log_type=log_type,
-            output_file=filepath,
+            use_storage=True,
             overwrite=True,
             start_date=start_date,
             end_date=end_date,
@@ -346,7 +348,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         call_command(
             "exportlogs",
             log_type=log_type,
-            output_file=filepath_2,
+            use_storage=True,
             overwrite=True,
             start_date=start_date_2,
             end_date=end_date_2,
@@ -355,6 +357,7 @@ class ContentSessionLogCSVExportTestCase(APITestCase):
         call_command(
             "bulkexportusers",
             facility=self.facility.id,
+            use_storage=True,
             overwrite=True,
         )
         # execute cleanup
