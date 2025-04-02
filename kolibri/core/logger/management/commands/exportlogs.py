@@ -103,7 +103,7 @@ class Command(AsyncCommand):
         except ValueError:
             return False
 
-    def handle_async(self, *args, **options):
+    def handle_async(self, *args, **options):  # noqa: C901
 
         # set language for the translation of the messages
         locale = settings.LANGUAGE_CODE if not options["locale"] else options["locale"]
@@ -137,12 +137,9 @@ class Command(AsyncCommand):
 
             log_info = classes_info[log_type]
 
-            if options["output_file"] is None:
-                filename = log_info["filename"].format(
-                    facility.name, facility.id[:4], start_date[:10], end_date[:10]
-                )
-            else:
-                filename = options["output_file"]
+            filename = log_info["filename"].format(
+                facility.name, facility.id[:4], start_date[:10], end_date[:10]
+            )
 
             storage_filepath = None
             local_filepath = None
