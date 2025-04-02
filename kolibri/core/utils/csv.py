@@ -35,6 +35,8 @@ def open_csv_for_writing(storage_filepath=None, local_filepath=None):
             )
             yield encoded_fh
             encoded_fh.flush()
+            if default_storage.exists(storage_filepath):
+                default_storage.delete(storage_filepath)
             default_storage.save(storage_filepath, f)
         logger.info("CSV file {} saved".format(storage_filepath))
     else:
