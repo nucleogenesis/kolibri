@@ -469,6 +469,26 @@ export const bulkUserManagementStrings = createTranslator('BulkUserManagementStr
     message: 'Assign {num, number} {num, plural, one {user} other {users}}',
     context: 'Side panel H1 heading showing the number of selected users to assign as coaches',
   },
+
+  noUsersMatch: {
+    message: 'No users match',
+    context: 'Displayed when no users match the current filters or search criteria.',
+  },
+
+  noUsersMatchSearch: {
+    message: 'No users match this search',
+    context: 'Displayed when no users match the current search term.',
+  },
+
+  noUsersMatchFilter: {
+    message: 'No users match this filter',
+    context: 'Displayed when no users match the current filter selection.',
+  },
+
+  noUsersMatchFiltersAndSearch: {
+    message: 'No users match these filters',
+    context: 'Displayed when no users match the combination of search term and filter selection.',
+  },
   // Trash page
   removedUsersTitle: {
     message: 'Removed users',

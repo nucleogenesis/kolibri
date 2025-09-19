@@ -188,8 +188,11 @@
         noCoachesExist$,
         noLearnersExist$,
         noSuperAdminsExist$,
-        allUsersFilteredOut$,
         permanentDeletion$,
+        noUsersMatch$,
+        noUsersMatchSearch$,
+        noUsersMatchFilter$,
+        noUsersMatchFiltersAndSearch$,
       } = bulkUserManagementStrings;
 
       // --- Computed Properties ---
