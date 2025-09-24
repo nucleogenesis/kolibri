@@ -486,7 +486,7 @@ export const bulkUserManagementStrings = createTranslator('BulkUserManagementStr
   },
 
   noUsersMatchFiltersAndSearch: {
-    message: 'No users match these filters',
+    message: 'No users match this search and this filter',
     context: 'Displayed when no users match the combination of search term and filter selection.',
   },
   // Trash page

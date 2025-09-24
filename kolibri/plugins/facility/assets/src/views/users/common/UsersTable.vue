@@ -189,7 +189,6 @@
         noLearnersExist$,
         noSuperAdminsExist$,
         permanentDeletion$,
-        noUsersMatch$,
         noUsersMatchSearch$,
         noUsersMatchFilter$,
         noUsersMatchFiltersAndSearch$,
@@ -426,6 +425,10 @@
               return noSuperAdminsExist$();
             }
           }
+          if (usersCount === 0) {
+            return coreStrings.noUsersExistLabel$();
+          }
+          return noUsersMatchFilter$();
         }
         return allUsersFilteredOut$({ filterText: search });
       });
