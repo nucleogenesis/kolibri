@@ -432,7 +432,10 @@
           if (usersCount === 0) {
             return coreStrings.noUsersExistLabel$();
           }
-          return noUsersMatchFilter$();
+          if (activeFiltersCount > 0) {
+            return noUsersMatchFilter$({ filtersCount: activeFiltersCount });
+          }
+          return '';
         }
         return allUsersFilteredOut$({ filterText: search });
       });
