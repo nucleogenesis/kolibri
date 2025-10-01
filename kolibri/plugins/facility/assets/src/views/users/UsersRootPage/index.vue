@@ -3,51 +3,114 @@
   <FacilityAppBarPage
     class="wrapper"
     :appearanceOverrides="{
-      maxWidth: '1440px',
-      margin: '0 auto',
-      padding: '2em',
+      width: '100%',
+      height: '100vh',
+      margin: '0px',
+      padding: '0px',
     }"
   >
-    <template #default="{ pageContentHeight }">
-      <!-- Adding 24 pixels to the max height to prevent having too much bottom padding space -->
-      <KPageContainer
-        class="flex-column"
-        :style="{ maxHeight: pageContentHeight - 48 + 'px', padding: '2em 2em 1em' }"
-      >
-        <KRouterLink
-          v-if="userIsMultiFacilityAdmin"
-          :to="{
-            name: $store.getters.facilityPageLinks.AllFacilitiesPage.name,
-            params: { subtopicName: 'UserPage' },
-          }"
-          icon="back"
-          :text="coreString('changeLearningFacility')"
-        />
-        <div class="users-page-header">
-          <h1>{{ coreString('usersLabel') }}</h1>
-          <div class="users-page-header-actions">
-            <KButton
-              hasDropdown
-              :primary="false"
-              :text="coreString('optionsLabel')"
-            >
-              <template #menu>
-                <KDropdownMenu
-                  :options="pageDropdownOptions"
-                  @select="handlePageDropdownSelection"
-                />
-              </template>
-            </KButton>
-            <KRouterLink
-              primary
-              appearance="raised-button"
-              :text="newUser$()"
-              :to="$store.getters.facilityPageLinks.UserCreatePage"
-            />
+    <template>
+      <div :style="containerStyles">
+        <div
+          class="header-shadow"
+          :style="headerStyles"
+        >
+          <KRouterLink
+            v-if="userIsMultiFacilityAdmin"
+            :to="{
+              name: $store.getters.facilityPageLinks.AllFacilitiesPage.name,
+              params: { subtopicName: 'UserPage' },
+            }"
+            icon="back"
+            :text="coreString('changeLearningFacility')"
+          />
+          <div class="users-page-header">
+            <h1>{{ coreString('usersLabel') }}</h1>
+            <div class="users-page-header-actions">
+              <KButton
+                hasDropdown
+                :primary="false"
+                :text="coreString('optionsLabel')"
+              >
+                <template #menu>
+                  <KDropdownMenu
+                    :options="pageDropdownOptions"
+                    @select="handlePageDropdownSelection"
+                  />
+                </template>
+              </KButton>
+              <KRouterLink
+                primary
+                appearance="raised-button"
+                :text="newUser$()"
+                :to="$store.getters.facilityPageLinks.UserCreatePage"
+              />
+            </div>
           </div>
+
+          <UsersTableToolbar
+            :filterPageName="PageNames.FILTER_USERS_SIDE_PANEL"
+            :selectedUsers="selectedUsers"
+            :numAppliedFilters="numAppliedFilters"
+          >
+            <template #userActions>
+              <div>
+                <KIconButton
+                  ref="assignButton"
+                  icon="assignCoaches"
+                  :ariaLabel="assignCoach$()"
+                  :disabled="!canAssignCoaches || !hasSelectedUsers"
+                  @click="navigateToSidePanel(PageNames.ASSIGN_COACHES_SIDE_PANEL)"
+                />
+                <KTooltip
+                  reference="assignButton"
+                  :refs="$refs"
+                  :text="assignCoach$()"
+                />
+                <KIconButton
+                  ref="enrollButton"
+                  icon="add"
+                  :ariaLabel="enrollToClass$()"
+                  :disabled="!canEnrollOrRemoveFromClass || !hasSelectedUsers"
+                  @click="navigateToSidePanel(PageNames.ENROLL_LEARNERS_SIDE_PANEL)"
+                />
+                <KTooltip
+                  reference="enrollButton"
+                  :refs="$refs"
+                  :text="enrollToClass$()"
+                />
+                <KIconButton
+                  ref="removeButton"
+                  icon="remove"
+                  :ariaLabel="removeFromClass$()"
+                  :disabled="!canEnrollOrRemoveFromClass || !hasSelectedUsers"
+                  @click="navigateToSidePanel(PageNames.REMOVE_FROM_CLASSES_SIDE_PANEL)"
+                />
+                <KTooltip
+                  reference="removeButton"
+                  :refs="$refs"
+                  :text="removeFromClass$()"
+                />
+                <KIconButton
+                  ref="trashButton"
+                  icon="trash"
+                  :ariaLabel="deleteSelectionTooltip"
+                  :disabled="!canDeleteSelection || !hasSelectedUsers"
+                  @click="isMoveToTrashModalOpen = true"
+                />
+                <KTooltip
+                  reference="trashButton"
+                  :refs="$refs"
+                  :text="deleteSelectionTooltip"
+                />
+              </div>
+            </template>
+          </UsersTableToolbar>
         </div>
         <UsersTable
           ref="usersTableRef"
+          class="users-table"
+          :style="{ padding: windowIsSmall ? '0' : '0 1em' }"
           :facilityUsers="facilityUsers"
           :usersCount="usersCount"
           :totalPages="totalPages"
@@ -55,60 +118,10 @@
           :selectedUsers.sync="selectedUsers"
           :filterPageName="PageNames.FILTER_USERS_SIDE_PANEL"
           :numAppliedFilters="numAppliedFilters"
+          @clearSelectedUsers="clearSelectedUsers"
           @clearFilters="resetFilters"
           @change="onChange"
-        >
-          <template #userActions>
-            <KIconButton
-              ref="assignButton"
-              icon="assignCoaches"
-              :ariaLabel="assignCoach$()"
-              :disabled="!canAssignCoaches || !hasSelectedUsers"
-              @click="navigateToSidePanel(PageNames.ASSIGN_COACHES_SIDE_PANEL)"
-            />
-            <KTooltip
-              reference="assignButton"
-              :refs="$refs"
-              :text="assignCoach$()"
-            />
-            <KIconButton
-              ref="enrollButton"
-              icon="add"
-              :ariaLabel="enrollToClass$()"
-              :disabled="!canEnrollOrRemoveFromClass || !hasSelectedUsers"
-              @click="navigateToSidePanel(PageNames.ENROLL_LEARNERS_SIDE_PANEL)"
-            />
-            <KTooltip
-              reference="enrollButton"
-              :refs="$refs"
-              :text="enrollToClass$()"
-            />
-            <KIconButton
-              ref="removeButton"
-              icon="remove"
-              :ariaLabel="removeFromClass$()"
-              :disabled="!canEnrollOrRemoveFromClass || !hasSelectedUsers"
-              @click="navigateToSidePanel(PageNames.REMOVE_FROM_CLASSES_SIDE_PANEL)"
-            />
-            <KTooltip
-              reference="removeButton"
-              :refs="$refs"
-              :text="removeFromClass$()"
-            />
-            <KIconButton
-              ref="trashButton"
-              icon="trash"
-              :ariaLabel="deleteSelectionTooltip"
-              :disabled="!canDeleteSelection || !hasSelectedUsers"
-              @click="isMoveToTrashModalOpen = true"
-            />
-            <KTooltip
-              reference="trashButton"
-              :refs="$refs"
-              :text="deleteSelectionTooltip"
-            />
-          </template>
-        </UsersTable>
+        />
         <!-- For sidepanels -->
         <router-view
           :selectedUsers="selectedUsers"
@@ -126,7 +139,7 @@
           :onChange="onChange"
           @close="isMoveToTrashModalOpen = false"
         />
-      </KPageContainer>
+      </div>
     </template>
   </FacilityAppBarPage>
 
@@ -139,10 +152,12 @@
   import { useRoute, useRouter } from 'vue-router/composables';
   import commonCoreStrings from 'kolibri/uiText/commonCoreStrings';
   import useFacilities from 'kolibri-common/composables/useFacilities';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { bulkUserManagementStrings } from 'kolibri-common/strings/bulkUserManagementStrings';
   import useUser from 'kolibri/composables/useUser';
   import { UserKinds } from 'kolibri/constants';
   import usePreviousRoute from 'kolibri-common/composables/usePreviousRoute';
+  import UsersTableToolbar from '../common/UsersTableToolbar';
   import useUserManagement from '../../../composables/useUserManagement';
   import FacilityAppBarPage from '../../FacilityAppBarPage';
   import { PageNames } from '../../../constants';
@@ -159,6 +174,7 @@
     },
     components: {
       UsersTable,
+      UsersTableToolbar,
       MoveToTrashModal,
       FacilityAppBarPage,
     },
@@ -217,7 +233,10 @@
         router.push(newRoute);
       }
 
+      const { windowIsSmall } = useKResponsiveWindow();
+
       return {
+        windowIsSmall,
         PageNames,
         userIsMultiFacilityAdmin,
         facilityUsers,
@@ -317,6 +336,29 @@
         }
         return this.deleteSelection$();
       },
+      headerStyles() {
+        return {
+          position: 'fixed',
+          top: this.windowIsSmall ? '6em' : '4em',
+          left: 0,
+          right: 0,
+          backgroundColor: 'white',
+          padding: '1em 1em 0.5em',
+          zIndex: 8,
+        };
+      },
+      containerStyles() {
+        const paddings = {
+          paddingTop: this.windowIsSmall ? '15.25em!important' : '11.25em!important',
+          paddingBottom: '4em',
+          paddingLeft: 0,
+          paddingRight: 0,
+        };
+        return {
+          ...paddings,
+          backgroundColor: 'white',
+        };
+      },
     },
     methods: {
       handlePageDropdownSelection(option) {
@@ -340,7 +382,7 @@
     gap: 16px;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1.5em;
+    margin-bottom: 0.5em;
 
     h1 {
       margin: 0;
@@ -355,9 +397,15 @@
     }
   }
 
-  .flex-column {
+  .users-container {
     display: flex;
     flex-direction: column;
+    height: 100%;
+    // top: 4em (app bar) + 2em (internal padding)
+    padding: 6em 2em 1em;
+    // !important to override
+    margin: 0 !important;
+    background-color: white;
   }
 
   /deep/ .main-wrapper {
@@ -365,6 +413,21 @@
     // the purpose of our maxHeight style on the KPageContainer.
     // Uses !important because the overridden style is inline
     padding-bottom: 0 !important;
+  }
+
+  .header-shadow {
+    box-shadow:
+      0 0 2px rgba(0, 0, 0, 0.12),
+      0 2px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  /deep/ .users-table {
+    thead {
+      position: static;
+      z-index: 8;
+      width: 100%;
+      background-color: white;
+    }
   }
 
 </style>
