@@ -24,85 +24,128 @@
             icon="back"
             :text="coreString('changeLearningFacility')"
           />
-          <div class="users-page-header">
-            <h1>{{ coreString('usersLabel') }}</h1>
-            <div class="users-page-header-actions">
-              <KButton
-                hasDropdown
-                :primary="false"
-                :text="coreString('optionsLabel')"
-              >
-                <template #menu>
-                  <KDropdownMenu
-                    :options="pageDropdownOptions"
-                    @select="handlePageDropdownSelection"
-                  />
-                </template>
-              </KButton>
-              <KRouterLink
-                primary
-                appearance="raised-button"
-                :text="newUser$()"
-                :to="$store.getters.facilityPageLinks.UserCreatePage"
-              />
-            </div>
-          </div>
 
           <UsersTableToolbar
             :filterPageName="PageNames.FILTER_USERS_SIDE_PANEL"
             :selectedUsers="selectedUsers"
             :numAppliedFilters="numAppliedFilters"
           >
-            <template #userActions>
-              <div>
-                <KIconButton
-                  ref="assignButton"
-                  icon="assignCoaches"
-                  :ariaLabel="assignCoach$()"
-                  :disabled="!canAssignCoaches || !hasSelectedUsers"
-                  @click="navigateToSidePanel(PageNames.ASSIGN_COACHES_SIDE_PANEL)"
+            <template #topRow>
+              <div class='users-header-top'>
+                <h1>{{ coreString('usersLabel') }}</h1>
+                <FilterTextbox
+                  ref="filterTextboxRef"
+                  v-model="searchTerm"
+                  :placeholder="coreString('searchForUser')"
+                  :aria-label="coreString('searchForUser')"
+                  class="move-down search-box"
                 />
-                <KTooltip
-                  reference="assignButton"
-                  :refs="$refs"
-                  :text="assignCoach$()"
+                <KRouterLink
+                  appearance="basic-link"
+                  :text="numAppliedFilters ? numFilters$({ n: numAppliedFilters }) : filterLabel$()"
+                  class="filter-button move-down"
+                  :to="overrideRoute($route, { name: PageNames.FILTER_USERS_SIDE_PANEL })"
                 />
-                <KIconButton
-                  ref="enrollButton"
-                  icon="add"
-                  :ariaLabel="enrollToClass$()"
-                  :disabled="!canEnrollOrRemoveFromClass || !hasSelectedUsers"
-                  @click="navigateToSidePanel(PageNames.ENROLL_LEARNERS_SIDE_PANEL)"
+              </div>
+              <div class="users-page-header-actions">
+                <KButton
+                  hasDropdown
+                  :primary="false"
+                  :text="coreString('optionsLabel')"
+                >
+                  <template #menu>
+                    <KDropdownMenu
+                      :options="pageDropdownOptions"
+                      @select="handlePageDropdownSelection"
+                    />
+                  </template>
+                </KButton>
+                <KRouterLink
+                  primary
+                  appearance="raised-button"
+                  :text="newUser$()"
+                  :to="$store.getters.facilityPageLinks.UserCreatePage"
                 />
-                <KTooltip
-                  reference="enrollButton"
-                  :refs="$refs"
-                  :text="enrollToClass$()"
-                />
-                <KIconButton
-                  ref="removeButton"
-                  icon="remove"
-                  :ariaLabel="removeFromClass$()"
-                  :disabled="!canEnrollOrRemoveFromClass || !hasSelectedUsers"
-                  @click="navigateToSidePanel(PageNames.REMOVE_FROM_CLASSES_SIDE_PANEL)"
-                />
-                <KTooltip
-                  reference="removeButton"
-                  :refs="$refs"
-                  :text="removeFromClass$()"
-                />
-                <KIconButton
-                  ref="trashButton"
-                  icon="trash"
-                  :ariaLabel="deleteSelectionTooltip"
-                  :disabled="!canDeleteSelection || !hasSelectedUsers"
-                  @click="isMoveToTrashModalOpen = true"
-                />
-                <KTooltip
-                  reference="trashButton"
-                  :refs="$refs"
-                  :text="deleteSelectionTooltip"
-                />
+              </div>
+            </template>
+            <template #bottomRow>
+              <div style="display:flex;justify-content:space-between;">
+                <div>
+                  <KIconButton
+                    ref="assignButton"
+                    icon="assignCoaches"
+                    :ariaLabel="assignCoach$()"
+                    :disabled="!canAssignCoaches || !hasSelectedUsers"
+                    @click="navigateToSidePanel(PageNames.ASSIGN_COACHES_SIDE_PANEL)"
+                  />
+                  <KTooltip
+                    reference="assignButton"
+                    :refs="$refs"
+                    :text="assignCoach$()"
+                  />
+                  <KIconButton
+                    ref="enrollButton"
+                    icon="add"
+                    :ariaLabel="enrollToClass$()"
+                    :disabled="!canEnrollOrRemoveFromClass || !hasSelectedUsers"
+                    @click="navigateToSidePanel(PageNames.ENROLL_LEARNERS_SIDE_PANEL)"
+                  />
+                  <KTooltip
+                    reference="enrollButton"
+                    :refs="$refs"
+                    :text="enrollToClass$()"
+                  />
+                  <KIconButton
+                    ref="removeButton"
+                    icon="remove"
+                    :ariaLabel="removeFromClass$()"
+                    :disabled="!canEnrollOrRemoveFromClass || !hasSelectedUsers"
+                    @click="navigateToSidePanel(PageNames.REMOVE_FROM_CLASSES_SIDE_PANEL)"
+                  />
+                  <KTooltip
+                    reference="removeButton"
+                    :refs="$refs"
+                    :text="removeFromClass$()"
+                  />
+                  <KIconButton
+                    ref="trashButton"
+                    icon="trash"
+                    :ariaLabel="deleteSelectionTooltip"
+                    :disabled="!canDeleteSelection || !hasSelectedUsers"
+                    @click="isMoveToTrashModalOpen = true"
+                  />
+                  <KTooltip
+                    reference="trashButton"
+                    :refs="$refs"
+                    :text="deleteSelectionTooltip"
+                  />
+                </div>
+  <nav>
+    <div class="pagination-actions">
+      <span
+        dir="auto"
+        class="pagination-label"
+      >
+                      pagination message
+      </span>
+      <KButtonGroup>
+        <KIconButton
+          :ariaLabel="$tr('previousResults')"
+          :disabled="previousButtonDisabled"
+          size="small"
+          icon="back"
+          @click="changePage(-1)"
+        />
+        <KIconButton
+          :ariaLabel="$tr('nextResults')"
+          :disabled="nextButtonDisabled"
+          size="small"
+          icon="forward"
+          @click="changePage(+1)"
+        />
+      </KButtonGroup>
+    </div>
+  </nav>
               </div>
             </template>
           </UsersTableToolbar>
@@ -146,7 +189,12 @@
 
 <script>
 
-  import { ref, getCurrentInstance, onMounted } from 'vue';
+  import clamp from 'lodash/clamp';
+import pickBy from 'lodash/pickBy';
+import debounce from 'lodash/debounce';
+  import FilterTextbox from 'kolibri/components/FilterTextbox';
+
+  import { ref, computed, onBeforeUnmount, getCurrentInstance, onMounted } from 'vue';
   import { useRoute, useRouter } from 'vue-router/composables';
   import commonCoreStrings from 'kolibri/uiText/commonCoreStrings';
   import useFacilities from 'kolibri-common/composables/useFacilities';
@@ -174,9 +222,10 @@
       UsersTableToolbar,
       MoveToTrashModal,
       FacilityAppBarPage,
+    FilterTextbox
     },
     mixins: [commonCoreStrings],
-    setup() {
+  setup(_, { expose }) {
       usePreviousRoute();
       const route = useRoute();
       const router = useRouter();
@@ -193,6 +242,10 @@
         removeFromClass$,
         deleteSelection$,
         cannotDeleteSelfTooltip$,
+        numFilters$,
+        filterLabel$,
+        numUsersSelected$,
+        clearFiltersLabel$,
       } = bulkUserManagementStrings;
 
       const { $store, $router } = getCurrentInstance().proxy;
@@ -229,7 +282,70 @@
         router.push(newRoute);
       }
 
+    const filterTextboxRef = ref(null);
+    const emitSearchTerm = value => {
+      if (value === '') {
+        value = null;
+      }
+      router.push({
+        ...route,
+        query: pickBy({
+          ...route.query,
+          search: value,
+          page: null,
+        }),
+      });
+    };
+    const debouncedSearchTerm = debounce(emitSearchTerm, 300);
+
+    const searchTerm = computed({
+      get() {
+        return route.query.search || '';
+      },
+      set(value) {
+        debouncedSearchTerm(value);
+      },
+    });
+
+    onBeforeUnmount(() => {
+      const { query } = route;
+      if (query.ordering || query.order || query.page) {
+        router.replace({ query: null });
+      }
+    });
+
+    const focus = () => {
+      filterTextboxRef.value?.focus();
+    };
+
+    expose({
+      focus,
+    });
+   const itemsPerPage = computed({
+        get() {
+          return Number(route.query.page_size) || 30;
+        },
+        set(value) {
+          router.push({
+            ...route,
+            query: pickBy({
+              ...route.query,
+              page_size: value,
+              page: null,
+            }),
+          });
+        },
+      });
+
+
       return {
+        overrideRoute,
+        searchTerm,
+        filterTextboxRef,
+        numFilters$,
+        filterLabel$,
+        numUsersSelected$,
+        clearFiltersLabel$,
         PageNames,
         userIsMultiFacilityAdmin,
         facilityUsers,
@@ -255,10 +371,37 @@
         currentUserId,
         isSuperuser,
         isAdmin,
+        overrideRoute,
         navigateToSidePanel,
+        numFilters$,
+        filterLabel$,
+        numUsersSelected$,
+        clearFiltersLabel$,
       };
     },
     computed: {
+      startRange() {
+        return (this.value - 1) * this.itemsPerPage;
+      },
+      visibleStartRange() {
+        return Math.min(this.startRange + 1, this.numFilteredItems);
+      },
+      endRange() {
+        return this.value * this.itemsPerPage;
+      },
+      visibleEndRange() {
+        return Math.min(this.endRange, this.numFilteredItems);
+      },
+      previousButtonDisabled() {
+        return this.value === 1 || this.numFilteredItems === 0;
+      },
+      nextButtonDisabled() {
+        return (
+          this.totalPageNumber === 1 ||
+          this.value === this.totalPageNumber ||
+          this.numFilteredItems === 0
+        );
+      },
       pageDropdownOptions() {
         return [
           {
@@ -286,9 +429,9 @@
           .some(
             user =>
               user.kind.includes(UserKinds.COACH) ||
-              user.kind === UserKinds.ADMIN ||
-              user.kind === UserKinds.SUPERUSER ||
-              user.is_superuser,
+                user.kind === UserKinds.ADMIN ||
+                user.kind === UserKinds.SUPERUSER ||
+                user.is_superuser,
           );
       },
       canEnrollOrRemoveFromClass() {
@@ -298,10 +441,10 @@
           .every(
             user =>
               user.kind === UserKinds.LEARNER ||
-              user.kind.includes(UserKinds.COACH) ||
-              user.kind === UserKinds.ADMIN ||
-              user.kind === UserKinds.SUPERUSER ||
-              user.is_superuser,
+                user.kind.includes(UserKinds.COACH) ||
+                user.kind === UserKinds.ADMIN ||
+                user.kind === UserKinds.SUPERUSER ||
+                user.is_superuser,
           );
       },
       hasSelectedSuperusers() {
@@ -344,6 +487,11 @@
       },
     },
     methods: {
+      changePage(change) {
+        // Clamp the newPage number between the bounds if browser doesn't correctly
+        // disable buttons (see #6454 issue with old versions of MS Edge)
+        this.$emit('input', clamp(this.value + change, 1, this.totalPageNumber));
+      },
       handlePageDropdownSelection(option) {
         if (option.value) {
           this.$router.push({
@@ -353,6 +501,22 @@
         }
       },
     },
+    $trs: {
+      previousResults: {
+        message: 'Previous results',
+        context:
+          'Text which indicates the previous page of results when a user makes a search query.\n',
+      },
+      nextResults: {
+        message: 'Next results',
+        context: 'Text which indicates the next page of results when a user makes a search query.',
+      },
+      pagination: {
+        message:
+          '{ visibleStartRange, number } - { visibleEndRange, number } of { numFilteredItems, number }',
+        context: "Refers to pagination. Only translate the word \"of''.",
+      },
+    },
   };
 
 </script>
@@ -360,49 +524,60 @@
 
 <style lang="scss" scoped>
 
-  .users-page-header {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.5em;
+.users-page-header {
+display: flex;
+gap: 16px;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 0.5em;
 
-    h1 {
-      margin: 0;
-    }
 
-    .users-page-header-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: center;
-      justify-content: flex-end;
-    }
-  }
+.users-page-header-actions {
+display: flex;
+flex-wrap: wrap;
+gap: 16px;
+align-items: center;
+justify-content: flex-end;
+}
+}
 
-  .users-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    // top: 4em (app bar) + 2em (internal padding)
-    padding: 6em 2em 1em;
-    // !important to override
-    margin: 0 !important;
-    background-color: white;
-  }
+.users-container {
+display: flex;
+flex-direction: column;
+height: 100%;
+// top: 4em (app bar) + 2em (internal padding)
+padding: 6em 2em 1em;
+// !important to override
+margin: 0 !important;
+background-color: white;
+}
 
-  /deep/ .main-wrapper {
-    // The default padding causes root scroll which defeats
-    // the purpose of our maxHeight style on the KPageContainer.
-    // Uses !important because the overridden style is inline
-    padding-bottom: 0 !important;
-  }
+/deep/ .main-wrapper {
+// The default padding causes root scroll which defeats
+// the purpose of our maxHeight style on the KPageContainer.
+// Uses !important because the overridden style is inline
+padding-bottom: 0 !important;
+}
 
-  .header-shadow {
-    z-index: 4;
-    box-shadow:
-      0 0 2px rgba(0, 0, 0, 0.12),
-      0 2px 2px rgba(0, 0, 0, 0.2);
-  }
+.header-shadow {
+z-index: 4;
+box-shadow:
+0 0 2px rgba(0, 0, 0, 0.12),
+0 2px 2px rgba(0, 0, 0, 0.2);
+}
 
+.move-down {
+position: relative;
+}
+
+.search-box {
+display: inline-block;
+width: 100%;
+}
+
+.users-header-top {
+display: flex;
+align-items: center;
+gap: 1em;
+}
 </style>

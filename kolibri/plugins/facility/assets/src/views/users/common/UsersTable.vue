@@ -2,11 +2,7 @@
 
   <div class="flex-column">
     <PaginatedListContainerWithBackend
-      v-model="currentPage"
       class="paginated-wrapper"
-      :itemsPerPage="itemsPerPage"
-      :totalPageNumber="totalPages"
-      :numFilteredItems="usersCount"
     >
       <KTable
         class="move-down user-roster"
@@ -113,17 +109,6 @@
       </KTable>
       <template #paginationFooter>
         <div>
-          <div v-if="selectedUsers.size > 0">
-            <span style="margin: 0 1em">
-              {{ numUsersSelected$({ n: selectedUsers.size }) }}
-            </span>
-
-            <KButton
-              appearance="basic-link"
-              :text="coreStrings.clearAction$()"
-              @click="$emit('clearSelectedUsers')"
-            />
-          </div>
         </div>
       </template>
     </PaginatedListContainerWithBackend>
