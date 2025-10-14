@@ -132,6 +132,9 @@
   import { toRefs, ref, computed, getCurrentInstance } from 'vue';
   import { useRoute, useRouter } from 'vue-router/composables';
   import { UserKinds } from 'kolibri/constants';
+  import pickBy from 'lodash/pickBy';
+  import debounce from 'lodash/debounce';
+  import FilterTextbox from 'kolibri/components/FilterTextbox';
   import { coreStrings } from 'kolibri/uiText/commonCoreStrings';
   import { getUserKindDisplayMap } from 'kolibri-common/uiText/userKinds';
   import UserTypeDisplay from 'kolibri-common/components/UserTypeDisplay';
@@ -339,6 +342,61 @@
             color: $themeTokens.text,
           },
         };
+      });
+
+      const emitSearchTerm = value => {
+        if (value === '') {
+          value = null;
+        }
+        router.push({
+          ...route,
+          query: pickBy({
+            ...route.query,
+            search: value,
+            page: null,
+          }),
+        });
+      };
+      const debouncedSearchTerm = debounce(emitSearchTerm, 300);
+
+      const searchTerm = computed({
+        get() {
+          return route.query.search || '';
+        },
+        set(value) {
+          debouncedSearchTerm(value);
+        },
+      });
+
+      const currentPage = computed({
+        get() {
+          return Number(route.query.page) || 1;
+        },
+        set(value) {
+          router.push({
+            ...route,
+            query: pickBy({
+              ...route.query,
+              page: value,
+            }),
+          });
+        },
+      });
+
+      const itemsPerPage = computed({
+        get() {
+          return Number(route.query.page_size) || 30;
+        },
+        set(value) {
+          router.push({
+            ...route,
+            query: pickBy({
+              ...route.query,
+              page_size: value,
+              page: null,
+            }),
+          });
+        },
       });
 
       const userToChangeSet = computed(() => {
