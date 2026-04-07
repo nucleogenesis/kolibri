@@ -31,7 +31,10 @@
           </template>
         </CoachHeader>
       </div>
-      <MissingResourceAlert v-if="contentMissing" />
+      <MissingResourceAlert
+        v-if="contentMissing"
+        class="content-missing-alert"
+      />
       <div
         v-if="courseSession"
         class="content"
@@ -929,6 +932,10 @@
 
   .learning-objectives-tab {
     padding: 0;
+  }
+
+  .content-missing-alert {
+    margin: 0 16px 8px;
   }
 
 </style>
