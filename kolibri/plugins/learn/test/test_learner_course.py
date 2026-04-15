@@ -18,6 +18,7 @@ from kolibri.core.courses.models import CourseSessionAssignment
 from kolibri.core.courses.models import TestType
 from kolibri.core.courses.models import UnitTestAssignment
 from kolibri.core.logger.models import ContentSummaryLog
+from kolibri.core.logger.utils.pre_post_test import get_synthetic_content_id
 
 
 DUMMY_PASSWORD = "password"
@@ -476,6 +477,46 @@ class LearnerCourseTestCase(APITestCase):
         self.assertEqual(response["started"], True)
         self.assertEqual(response["active_test"]["unit_id"], unit.id)
         self.assertEqual(response["active_test"]["test_type"], TestType.Pre)
+        self.assertEqual(response["active_test"]["submitted"], False)
+        self.assertEqual(response["resume_position"], None)
+
+    def test_learner_course_resume__pre_test_active_submitted_by_learner(self):
+        course, course_session, units = self._create_course(
+            units=3, lessons=3, resources=3
+        )
+        # unit 1 pre test active and the learner has already submitted their
+        # attempt (coach hasn't closed the test yet)
+        unit, lessons = units[0]
+        UnitTestAssignment.objects.create(
+            course_session=course_session,
+            unit_contentnode_id=unit.id,
+            collection=self.classroom,
+            test_type=TestType.Pre,
+            closed=False,
+            activated_by=self.coach,
+        )
+        ContentSummaryLog.objects.create(
+            user=self.learner,
+            content_id=get_synthetic_content_id(
+                course_session.id, unit.id, TestType.Pre
+            ),
+            kind=content_kinds.QUIZ,
+            progress=1.0,
+            start_timestamp=now(),
+        )
+
+        self.client.login(username="learner", password=DUMMY_PASSWORD)
+
+        get_request = self.client.get(
+            reverse(self.basename + "-resume", kwargs={"pk": course_session.id})
+        )
+
+        self.assertEqual(get_request.status_code, 200)
+        response = get_request.data
+        self.assertEqual(response["started"], True)
+        self.assertEqual(response["active_test"]["unit_id"], unit.id)
+        self.assertEqual(response["active_test"]["test_type"], TestType.Pre)
+        self.assertEqual(response["active_test"]["submitted"], True)
         self.assertEqual(response["resume_position"], None)
 
     def test_learner_course_resume__post_test_active(self):
@@ -533,6 +574,7 @@ class LearnerCourseTestCase(APITestCase):
         self.assertEqual(response["started"], True)
         self.assertEqual(response["active_test"]["unit_id"], unit.id)
         self.assertEqual(response["active_test"]["test_type"], TestType.Post)
+        self.assertEqual(response["active_test"]["submitted"], False)
         self.assertEqual(response["resume_position"], None)
 
     def test_learner_course_resume__resume_position_first_resource(self):

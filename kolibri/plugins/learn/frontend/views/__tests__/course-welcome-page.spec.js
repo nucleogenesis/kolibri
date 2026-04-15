@@ -245,7 +245,7 @@ describe('CourseWelcomePage', () => {
   it('navigates to the pre-test when the Start link is clicked during an active test', async () => {
     useResources({
       started: true,
-      active_test: { unit_id: 'unit-1', test_type: 'pre' },
+      active_test: { unit_id: 'unit-1', test_type: 'pre', submitted: false },
       resume_position: null,
     });
     const wrapper = renderComponent();

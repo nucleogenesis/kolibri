@@ -19,6 +19,7 @@ from kolibri.core.content.models import ContentRequestPriority
 from kolibri.core.content.utils.assignment import ContentAssignmentManager
 from kolibri.core.fields import DateTimeTzField
 from kolibri.core.logger.models import ContentSummaryLog
+from kolibri.core.logger.utils.pre_post_test import get_synthetic_content_id
 from kolibri.core.utils.cache import process_cache
 from kolibri.utils.data import ChoicesEnum
 from kolibri.utils.time_utils import local_now
@@ -130,9 +131,22 @@ class CourseSession(AbstractFacilityDataModel):
 
         unit_test_active = unit_test_assignments_qs.filter(closed=False).first()
         if unit_test_active:
+            # `submitted` distinguishes "coach activated, learner idle"
+            # from "learner submitted, waiting for coach to close"; `started`
+            # alone cannot.
+            submitted = ContentSummaryLog.objects.filter(
+                user=user,
+                content_id=get_synthetic_content_id(
+                    self.id,
+                    unit_test_active.unit_contentnode_id,
+                    unit_test_active.test_type,
+                ),
+                progress__gte=1,
+            ).exists()
             result["active_test"] = {
                 "unit_id": unit_test_active.unit_contentnode_id,
                 "test_type": unit_test_active.test_type,
+                "submitted": submitted,
             }
             result["started"] = True
             return result

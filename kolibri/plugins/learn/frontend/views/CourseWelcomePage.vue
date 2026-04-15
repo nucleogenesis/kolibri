@@ -350,15 +350,16 @@
         if (!progress?.started) {
           return startCourseAction$();
         }
-        // `started` flips true as soon as the first pre-test becomes active,
-        // so it alone mislabels the very first pre-test as "Resume". When a
-        // later-unit pre-test is active, the backend wipes resume_position —
-        // so the only remaining signal that an earlier pre-test was submitted
-        // is an active test belonging to a non-first unit.
+        // `started` flips true when the coach activates the pre-test, so
+        // show "Start" only while the learner is on that first pre-test and
+        // hasn't submitted yet. A later-unit active pre-test implies the
+        // earlier one was taken, and `submitted` covers the gap between
+        // learner submitting and coach closing.
         const firstUnitId = units.value?.[0]?.id;
         const onFirstPreTest =
           progress.active_test?.test_type === TestType.PRE &&
           progress.active_test?.unit_id === firstUnitId &&
+          !progress.active_test?.submitted &&
           !progress.resume_position;
 
         if (onFirstPreTest) {
