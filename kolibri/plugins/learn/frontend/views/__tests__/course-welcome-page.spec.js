@@ -108,9 +108,6 @@ describe('CourseWelcomePage', () => {
       if (!active_test) return false;
       return active_test.unit_id === unitId && active_test.test_type === testType;
     }),
-    isCourseLessonAvailable: jest.fn(() => started),
-    isCurrentCourseLesson: jest.fn(() => false),
-    getCourseLessonStatus: jest.fn(() => (started ? 'open' : 'locked')),
   });
 
   beforeEach(() => {
@@ -266,6 +263,18 @@ describe('CourseWelcomePage', () => {
         }),
       );
     });
+  });
+
+  it('shows the Resume label once the learner has submitted the first pre-test', async () => {
+    useResources({
+      started: true,
+      active_test: { unit_id: 'unit-1', test_type: 'pre', submitted: true },
+      resume_position: null,
+    });
+    const wrapper = renderComponent();
+
+    await wrapper.findByRole('link', { name: resumeCourseAction$() });
+    expect(wrapper.queryByRole('link', { name: startCourseAction$() })).not.toBeInTheDocument();
   });
 
   it('locks lessons past the resume position within the resume unit', async () => {
